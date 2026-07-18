@@ -1,0 +1,23 @@
+# Godot 4+ editor cache and import data (regenerated automatically on open)
+.godot/
+/.import/
+
+# Exported builds
+/builds/
+/export/
+export.cfg
+export_presets.cfg
+
+# Mono/.NET (unused now, but ignore if we ever add C#)
+.mono/
+data_*/
+mono_crash.*.json
+
+# Locally installed Godot editor binary (see tools/install-godot.ps1)
+/tools/godot/
+
+# OS / editor junk
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp

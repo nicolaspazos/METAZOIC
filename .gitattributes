@@ -1,0 +1,26 @@
+# Normalize line endings so scenes/scripts stay diff-clean across Windows/macOS/Linux.
+* text=auto eol=lf
+
+# Godot text formats
+*.gd      text
+*.tscn    text
+*.tres    text
+*.godot   text
+*.import  text
+*.cfg     text
+*.svg     text
+
+# Binary assets — never touch line endings
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.webp    binary
+*.glb     binary
+*.gltf    binary
+*.fbx     binary
+*.blend   binary
+*.ogg     binary
+*.wav     binary
+*.mp3     binary
+*.ttf     binary
+*.otf     binary

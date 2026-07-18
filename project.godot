@@ -1,0 +1,28 @@
+; Engine configuration file for METAZOIC.
+; This is a plain-text INI-style file — safe to read and edit by hand or by AI.
+; Docs: https://docs.godotengine.org/en/stable/classes/class_projectsettings.html
+
+config_version=5
+
+[application]
+
+config/name="METAZOIC"
+config/description="PS2-style third-person open-world game. A meteorite carries a parasite that grants powers; the caveman absorbs them by defeating boss dinosaurs."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.4", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+; Global singleton that tracks which powers the player has absorbed.
+PowerSystem="*res://scripts/systems/power_system.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2

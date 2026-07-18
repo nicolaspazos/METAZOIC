@@ -1,0 +1,93 @@
+[gd_scene load_steps=11 format=3 uid="uid://c0metazoicmain00"]
+
+[ext_resource type="PackedScene" uid="uid://b0metazoicplayer0" path="res://scenes/player/player.tscn" id="1"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_horizon_color = Color(0.64, 0.66, 0.68, 1)
+ground_horizon_color = Color(0.64, 0.66, 0.68, 1)
+ground_bottom_color = Color(0.23, 0.2, 0.16, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_energy = 1.0
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.7, 0.72, 0.7, 1)
+fog_density = 0.008
+
+[sub_resource type="PlaneMesh" id="ground_mesh"]
+size = Vector2(300, 300)
+
+[sub_resource type="StandardMaterial3D" id="ground_mat"]
+albedo_color = Color(0.32, 0.42, 0.24, 1)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="ground_shape"]
+size = Vector3(300, 1, 300)
+
+[sub_resource type="BoxMesh" id="rock_mesh"]
+size = Vector3(3, 3, 3)
+
+[sub_resource type="StandardMaterial3D" id="rock_mat"]
+albedo_color = Color(0.45, 0.42, 0.38, 1)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="rock_shape"]
+size = Vector3(3, 3, 3)
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 20, 0)
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="."]
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("ground_mesh")
+surface_material_override/0 = SubResource("ground_mat")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("ground_shape")
+
+[node name="Rock1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, -6)
+
+[node name="RockMesh" type="MeshInstance3D" parent="Rock1"]
+mesh = SubResource("rock_mesh")
+surface_material_override/0 = SubResource("rock_mat")
+
+[node name="RockCollision" type="CollisionShape3D" parent="Rock1"]
+shape = SubResource("rock_shape")
+
+[node name="Rock2" type="StaticBody3D" parent="."]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -10, 3, -12)
+
+[node name="RockMesh" type="MeshInstance3D" parent="Rock2"]
+mesh = SubResource("rock_mesh")
+surface_material_override/0 = SubResource("rock_mat")
+
+[node name="RockCollision" type="CollisionShape3D" parent="Rock2"]
+shape = SubResource("rock_shape")
+
+[node name="Rock3" type="StaticBody3D" parent="."]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -4, 2.25, 10)
+
+[node name="RockMesh" type="MeshInstance3D" parent="Rock3"]
+mesh = SubResource("rock_mesh")
+surface_material_override/0 = SubResource("rock_mat")
+
+[node name="RockCollision" type="CollisionShape3D" parent="Rock3"]
+shape = SubResource("rock_shape")
+
+[node name="Player" parent="." instance=ExtResource("1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
