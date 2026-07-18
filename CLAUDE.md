@@ -63,6 +63,22 @@ Concept and roadmap live in [GAME_DESIGN.md](GAME_DESIGN.md).
   and `tint_i` — set via `set_instance_shader_parameter` on each MeshInstance3D
   (see raptor.gd `_set_flash`, alpha_raptor.gd `_ready`).
 
+## Intro flow & the parasite
+
+- The player starts **uninfected** at the Camp (safe, unarmed, hair over face).
+  `player.infected == false` → `_try_attack` no-ops, raptors' `_is_prey()` returns
+  false (they ignore him), and the raptor `Spawner` stays dormant.
+- The `InfectionTrigger` Area3D at the crash site calls `player.infect()`:
+  reveals the face (`CavemanVisual.reveal_face()`), shows the black-red parasite
+  fists, emits `parasite_bonded` (HUD clears the objective + shows the banner),
+  and everything hostile activates.
+- **The parasite is black and red** — parasite materials use crystal.png (black
+  chitin + red veins). Keep all parasite FX (sparks, shards, fists, power FX,
+  banners) in that palette, never green.
+- Models are **rounded**: CapsuleMesh/SphereMesh limbs and bodies, CylinderMesh
+  cones (top_radius 0) for teeth/claws/spikes, low radial_segments (6-12) for
+  the PS2 facet look. Avoid plain BoxMesh for organic shapes.
+
 ## Gameplay conventions
 
 - **Facing:** the front of every character model is **local +Z** on its `Mesh` node.

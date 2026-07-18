@@ -88,7 +88,7 @@ func _physics_process(delta: float) -> void:
 				_move_horizontal(to_target.normalized() * wander_speed, delta)
 			else:
 				_move_horizontal(Vector3.ZERO, delta)
-			if dist < aggro_range:
+			if dist < aggro_range and _is_prey(player):
 				state = State.CHASE
 				Sfx.play3d("growl", global_position, -2.0)
 		State.CHASE:
@@ -211,6 +211,12 @@ func _die() -> void:
 	t.tween_interval(9.0)
 	t.tween_property(mesh, "position:y", -1.4, 2.5)
 	t.tween_callback(queue_free)
+
+
+## Raptors only hunt the caveman once the parasite has bonded — before that he
+## smells wrong and they leave him alone (safe intro walk to the meteor).
+func _is_prey(p: Node) -> bool:
+	return p != null and (not ("infected" in p) or p.infected)
 
 
 func _move_horizontal(target: Vector3, delta: float) -> void:

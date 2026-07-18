@@ -10,20 +10,23 @@ shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
 shader_parameter/jitter = 160.0
 
-[sub_resource type="BoxMesh" id="rock_mesh"]
-size = Vector3(2.4, 2.4, 2.4)
+[sub_resource type="SphereMesh" id="rock_mesh"]
+radius = 1.35
+height = 2.0
+radial_segments = 9
+rings = 5
 
-[sub_resource type="BoxShape3D" id="rock_shape"]
-size = Vector3(2.4, 2.4, 2.4)
+[sub_resource type="SphereShape3D" id="rock_shape"]
+radius = 1.2
 
 [node name="Rock" type="StaticBody3D"]
 collision_layer = 1
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.9239, 0, 0.3827, 0, 1, 0, -0.3827, 0, 0.9239, 0, 0.8, 0)
+transform = Transform3D(0.9239, 0, 0.3827, 0, 1, 0, -0.3827, 0, 0.9239, 0, 0.55, 0)
 mesh = SubResource("rock_mesh")
 surface_material_override/0 = SubResource("mat_rock")
 
 [node name="Collision" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.9239, 0, 0.3827, 0, 1, 0, -0.3827, 0, 0.9239, 0, 0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
 shape = SubResource("rock_shape")

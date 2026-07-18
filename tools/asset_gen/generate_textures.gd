@@ -276,14 +276,15 @@ func _sun() -> void:
 	print("  wrote sun.png")
 
 
+## The parasite: near-black chitin shot through with pulsing red veins.
 func _crystal() -> void:
 	var vein := _noise(90, 0.06, 3)
 	var star := _noise(91, 0.4, 1)
 	_paint("crystal", func(x, y):
-		var c := Color(0.03, 0.09, 0.05)
+		var c := Color(0.05, 0.02, 0.03)
 		var v := 1.0 - absf(_tiled(vein, x, y))
-		if v > 0.82:
-			c = c.lerp(Color(0.35, 1.0, 0.5), (v - 0.82) / 0.18)
-		if _tiled(star, x, y) > 0.68:
-			c = c.lerp(Color(0.6, 1.0, 0.7), 0.6)
+		if v > 0.8:
+			c = c.lerp(Color(1.0, 0.12, 0.08), (v - 0.8) / 0.2)
+		if _tiled(star, x, y) > 0.72:
+			c = c.lerp(Color(0.75, 0.08, 0.06), 0.55)
 		return c)

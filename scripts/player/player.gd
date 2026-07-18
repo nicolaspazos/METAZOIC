@@ -15,6 +15,8 @@ signal health_changed(current: float, max_value: float)
 signal damaged
 signal kills_changed(count: int)
 signal died
+## Emitted once, when the meteor parasite bonds with the caveman.
+signal parasite_bonded
 
 @export_group("Movement")
 @export var move_speed := 6.0
@@ -45,10 +47,13 @@ const POWER_COOLDOWNS := {
 @onready var shield_frill: Node3D = $Mesh/ShieldFrill
 @onready var jaw_top: Node3D = $Mesh/JawTop
 @onready var jaw_bottom: Node3D = $Mesh/JawBottom
-@onready var club_head: Node3D = $Mesh/RightArmPivot/ClubHead
+@onready var fist_node: Node3D = $Mesh/RightArmPivot/Hand
 
 var health: float
 var kills := 0
+## False until the player touches the meteor shard. Pre-infection the caveman is
+## unarmed (no attacks) and the wildlife leaves him alone.
+var infected := false
 var _pitch := -0.25
 var _attacking := false
 var _attack_index := 0
@@ -190,15 +195,15 @@ func _physics_process(delta: float) -> void:
 			_step_accum = 0.0
 			Sfx.play3d("step", global_position, -12.0)
 
-	# Club motion trail while a swing is in flight.
+	# Parasite-fist motion trail while a punch is in flight.
 	if _attacking:
-		var club_pos := club_head.global_position
+		var fist_pos := fist_node.global_position
 		if _club_prev != Vector3.ZERO:
-			var seg := club_pos - _club_prev
+			var seg := fist_pos - _club_prev
 			if seg.length() > 0.12:
-				Gore.streak(_club_prev.lerp(club_pos, 0.5), seg,
-					Color(0.95, 0.85, 0.6, 0.7), clampf(seg.length() * 1.3, 0.3, 1.6))
-		_club_prev = club_pos
+				Gore.streak(_club_prev.lerp(fist_pos, 0.5), seg,
+					Color(0.95, 0.15, 0.1, 0.7), clampf(seg.length() * 1.3, 0.3, 1.6))
+		_club_prev = fist_pos
 	else:
 		_club_prev = Vector3.ZERO
 
@@ -227,7 +232,22 @@ func _process(delta: float) -> void:
 
 # ------------------------------------------------------------------ club combat
 
+## The infection moment: parasite fists grow in, hair parts, the hunt begins.
+func infect() -> void:
+	if infected:
+		return
+	infected = true
+	visual.reveal_face()
+	Gore.spark(global_position + Vector3.UP * 1.5, Vector3.UP, 50)
+	Gore.hitstop(0.15, 1.1)
+	Sfx.play("absorb", 4.0, 0.72)
+	_trauma = maxf(_trauma, 0.9)
+	parasite_bonded.emit()
+
+
 func _try_attack(heavy := false) -> void:
+	if not infected:
+		return  # unarmed until the parasite bonds
 	if _attacking or _dashing:
 		return
 	_attacking = true
@@ -241,11 +261,11 @@ func _try_attack(heavy := false) -> void:
 		visual.play_attack(2)
 		Sfx.play3d("heavy", global_position, -3.0)
 	else:
-		_attack_index = (_attack_index + 1) % 2
-		windup = 0.14 if has_claws else 0.18
-		recovery = 0.22 if has_claws else 0.32
+		_attack_index = (_attack_index + 1) % 2  # alternate right/left fists
+		windup = 0.1 if has_claws else 0.13
+		recovery = 0.2 if has_claws else 0.28
 		visual.play_attack(_attack_index)
-		Sfx.play3d("swing", global_position, -6.0)
+		Sfx.play3d("swing", global_position, -6.0, 1.15)
 	# Face where the camera looks, and lunge a step into the swing.
 	visual.rotation.y = yaw_pivot.rotation.y + PI
 	var facing := -yaw_pivot.global_transform.basis.z

@@ -13,18 +13,25 @@ extends Node3D
 var _spawned: Array = []
 var _markers: Array = []
 var _timer := 0.0
+var _active := false
 
 
 func _ready() -> void:
 	for child in get_children():
 		if child is Marker3D:
 			_markers.append(child)
-	for i in mini(initial_spawns, _markers.size()):
-		_spawn_at(_markers[i])
 	_timer = spawn_interval
 
 
 func _process(delta: float) -> void:
+	# The pack only moves in once the parasite has bonded with the player.
+	if not _active:
+		var player := get_tree().get_first_node_in_group("player")
+		if player and (not ("infected" in player) or player.infected):
+			_active = true
+			for i in mini(initial_spawns, _markers.size()):
+				_spawn_at(_markers[i])
+		return
 	_timer -= delta
 	if _timer > 0.0:
 		return

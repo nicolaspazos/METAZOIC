@@ -15,6 +15,7 @@ extends Node3D
 
 const CRATER := Vector2(0.0, -18.0)
 const POND := Vector2(26.0, 26.0)
+const CAMP := Vector2(-26.0, 24.0)
 
 
 func _ready() -> void:
@@ -47,6 +48,8 @@ func _scatter(scene: PackedScene, count: int, r_min: float, r_max: float,
 			continue  # keep the crash site clear
 		if Vector2(x, z).distance_to(POND) < 10.0:
 			continue  # nothing growing in the waterhole
+		if Vector2(x, z).distance_to(CAMP) < 9.0:
+			continue  # keep the caveman's camp clear
 		var inst: Node3D = scene.instantiate()
 		add_child(inst)
 		inst.global_position = Vector3(x, terrain.height_at(x, z) - 0.05, z)

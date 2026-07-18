@@ -46,7 +46,7 @@ Press **F5** (or the ▶ button). You control the caveman:
 | **W A S D**  | Move (camera-relative)    |
 | **Mouse**    | Orbit camera              |
 | **Space**    | Jump                      |
-| **LMB**      | Club attack (2-swing combo) |
+| **LMB**      | Parasite-fist combo (unlocked by the meteor) |
 | **Q** (hold) | Ceratops Shield — blocks frontal damage |
 | **E**        | Raptor Claws — shredding dash |
 | **F**        | Tyrant Jaws — devouring bite (executes weakened prey) |
@@ -57,8 +57,12 @@ Press **F5** (or the ▶ button). You control the caveman:
 | **P**        | *(debug)* unlock all powers |
 | **Esc**      | Free / recapture the mouse |
 
-Powers unlock by killing the dinosaur that carries them — start with the
-**Alpha Raptor** guarding the meteor crater (grants Raptor Claws).
+**How it starts:** you wake at your camp, hair over your eyes, unarmed — the
+wildlife ignores you. Follow the objective to the fallen meteor. Touching the
+black-red shard **bonds the parasite to you**: your hair parts, black-red
+**parasite fists** grow over your hands, and every raptor in the valley starts
+hunting you. Powers unlock by killing the dinosaur that carries them — start
+with the **Alpha Raptor** guarding the crater (grants Raptor Claws).
 
 ## Regenerating assets
 

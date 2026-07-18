@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://c0metazoicmain00"]
+[gd_scene load_steps=34 format=3 uid="uid://c0metazoicmain00"]
 
 [ext_resource type="PackedScene" uid="uid://b0metazoicplayer0" path="res://scenes/player/player.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://craptormetaz0001" path="res://scenes/enemies/raptor.tscn" id="2"]
@@ -15,6 +15,8 @@
 [ext_resource type="PackedScene" uid="uid://cbonesmetazoic01" path="res://scenes/world/bones.tscn" id="13"]
 [ext_resource type="Script" path="res://scripts/world/sky_dressing.gd" id="14"]
 [ext_resource type="Script" path="res://scripts/world/ambience.gd" id="15"]
+[ext_resource type="PackedScene" uid="uid://ccampmetazoic001" path="res://scenes/world/camp.tscn" id="16"]
+[ext_resource type="Script" path="res://scripts/world/infection_trigger.gd" id="17"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.18, 0.1, 0.28, 1)
@@ -53,17 +55,20 @@ size = Vector3(0.8, 2.4, 0.8)
 size = Vector3(0.35, 1.1, 0.35)
 
 [sub_resource type="StandardMaterial3D" id="shard_mat"]
-albedo_color = Color(0.1, 0.3, 0.15, 1)
+albedo_color = Color(0.06, 0.02, 0.03, 1)
 emission_enabled = true
-emission = Color(0.3, 1, 0.4, 1)
-emission_energy_multiplier = 2.0
+emission = Color(1, 0.15, 0.08, 1)
+emission_energy_multiplier = 2.2
 
 [sub_resource type="StandardMaterial3D" id="ember_draw_mat"]
-albedo_color = Color(0.4, 1, 0.5, 1)
+albedo_color = Color(1, 0.2, 0.1, 1)
 shading_mode = 0
 emission_enabled = true
-emission = Color(0.35, 1, 0.45, 1)
+emission = Color(1, 0.18, 0.08, 1)
 emission_energy_multiplier = 2.5
+
+[sub_resource type="SphereShape3D" id="infect_shape"]
+radius = 4.5
 
 [sub_resource type="BoxMesh" id="ember_mesh"]
 material = SubResource("ember_draw_mat")
@@ -138,9 +143,18 @@ surface_material_override/0 = SubResource("shard_mat")
 
 [node name="ShardGlow" type="OmniLight3D" parent="CrashSite"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -18)
-light_color = Color(0.4, 1, 0.5, 1)
+light_color = Color(1, 0.25, 0.12, 1)
 light_energy = 2.5
 omni_range = 14.0
+
+[node name="InfectionTrigger" type="Area3D" parent="CrashSite"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -18)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("17")
+
+[node name="TriggerShape" type="CollisionShape3D" parent="CrashSite/InfectionTrigger"]
+shape = SubResource("infect_shape")
 
 [node name="Embers" type="GPUParticles3D" parent="CrashSite"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -18)
@@ -175,8 +189,11 @@ shape = SubResource("wall_ew_shape")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 6, 0)
 shape = SubResource("wall_ew_shape")
 
+[node name="Camp" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 0, 24)
+
 [node name="Player" parent="." instance=ExtResource("1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 10)
+transform = Transform3D(-0.852, 0, 0.524, 0, 1, 0, -0.524, 0, -0.852, -24, 4, 22)
 
 [node name="AlphaRaptor" parent="." instance=ExtResource("3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2, -21)

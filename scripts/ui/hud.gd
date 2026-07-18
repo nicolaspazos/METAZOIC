@@ -42,6 +42,7 @@ var _boss_fill_width := 0.0
 var _low_pulse: ColorRect
 var _beat_timer := 0.0
 var _pulse_t := 0.0
+var _objective: Label
 
 
 func _ready() -> void:
@@ -52,6 +53,7 @@ func _ready() -> void:
 	_build_banner()
 	_build_boss_bar()
 	_build_low_pulse()
+	_build_objective()
 	PowerSystem.power_absorbed.connect(_on_power_absorbed)
 
 	_player = get_tree().get_first_node_in_group("player")
@@ -61,6 +63,10 @@ func _ready() -> void:
 	_player.health_changed.connect(_on_health_changed)
 	_player.kills_changed.connect(_on_kills_changed)
 	_player.damaged.connect(_on_damaged)
+	if _player.has_signal("parasite_bonded"):
+		_player.parasite_bonded.connect(_on_parasite_bonded)
+		if not _player.infected:
+			_objective.text = "REACH  THE  FALLEN  METEOR"
 	_on_health_changed(_player.health, _player.max_health)
 
 
@@ -128,16 +134,38 @@ func _on_damaged() -> void:
 
 func _on_power_absorbed(power: int) -> void:
 	var info: Dictionary = PowerSystem.POWER_INFO.get(power, {})
-	_banner.text = "%s  ABSORBED" % str(info.get("name", "POWER")).to_upper()
-	_banner.visible = true
-	_banner.modulate = Color(1, 1, 1, 0)
 	Sfx.play("absorb", 2.0)
 	Gore.hitstop(0.25, 0.7)  # savor the moment
+	_show_banner("%s  ABSORBED" % str(info.get("name", "POWER")).to_upper())
+
+
+func _on_parasite_bonded() -> void:
+	_objective.text = ""
+	_show_banner("THE  PARASITE  BONDS  WITH  YOU")
+
+
+func _show_banner(text: String) -> void:
+	_banner.text = text
+	_banner.visible = true
+	_banner.modulate = Color(1, 1, 1, 0)
 	var t := create_tween()
 	t.tween_property(_banner, "modulate:a", 1.0, 0.15)
 	t.tween_interval(2.2)
 	t.tween_property(_banner, "modulate:a", 0.0, 0.6)
 	t.tween_callback(func(): _banner.visible = false)
+
+
+func _build_objective() -> void:
+	_objective = Label.new()
+	_objective.anchor_left = 0.0
+	_objective.anchor_right = 1.0
+	_objective.offset_top = 70
+	_objective.offset_bottom = 100
+	_objective.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_objective.add_theme_font_size_override("font_size", 18)
+	_objective.add_theme_color_override("font_color", Color(1.0, 0.85, 0.7, 0.85))
+	_objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_objective)
 
 
 # ------------------------------------------------------------------ UI construction
@@ -218,7 +246,7 @@ func _build_banner() -> void:
 	_banner.offset_bottom = 180
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_banner.add_theme_font_size_override("font_size", 40)
-	_banner.add_theme_color_override("font_color", Color(0.5, 1.0, 0.6))
+	_banner.add_theme_color_override("font_color", Color(1.0, 0.25, 0.18))
 	_banner.visible = false
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_banner)

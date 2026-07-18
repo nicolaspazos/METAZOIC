@@ -32,10 +32,11 @@ func _ready() -> void:
 	_pool_mat.albedo_color = Color(0.3, 0.01, 0.02)
 	_pool_mat.roughness = 0.4
 
+	# Parasite energy is black-red.
 	_spark_mat = StandardMaterial3D.new()
-	_spark_mat.albedo_color = Color(0.5, 1.0, 0.6)
+	_spark_mat.albedo_color = Color(0.9, 0.12, 0.08)
 	_spark_mat.emission_enabled = true
-	_spark_mat.emission = Color(0.4, 1.0, 0.5)
+	_spark_mat.emission = Color(1.0, 0.15, 0.08)
 	_spark_mat.emission_energy_multiplier = 2.0
 
 	_dust_mat = StandardMaterial3D.new()

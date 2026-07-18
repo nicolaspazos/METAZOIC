@@ -6,12 +6,22 @@ extends "res://scripts/enemies/raptor.gd"
 ## Stats (health, damage, speed) are overridden in alpha_raptor.tscn.
 
 
+var _bar_shown := false
+
+
 func _ready() -> void:
 	super()
 	# Parasite-red hide via psx_lit's per-instance tint.
 	for mi in _mesh_instances:
 		mi.set_instance_shader_parameter("tint_i", Color(1.35, 0.55, 0.5))
-	get_tree().call_group("hud", "show_boss", "ALPHA RAPTOR", self)
+
+
+func _process(delta: float) -> void:
+	super(delta)
+	# The boss bar appears the moment it first notices you.
+	if not _bar_shown and state == State.CHASE:
+		_bar_shown = true
+		get_tree().call_group("hud", "show_boss", "ALPHA RAPTOR", self)
 
 
 func _die() -> void:

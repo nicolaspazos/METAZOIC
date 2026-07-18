@@ -28,6 +28,17 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 
+	# --- The parasite bonds (intro flow) ---
+	_check(not player.infected, "starts uninfected and unarmed")
+	_check(player.visual.hair_front.visible, "hair covers the face pre-infection")
+	_check(not player.visual.fist_r.visible, "no parasite fists pre-infection")
+	player.infect()
+	_check(player.infected, "parasite bonds")
+	_check(not player.visual.hair_front.visible, "hair parts after infection")
+	_check(player.visual.fist_r.visible, "parasite fists appear")
+	player.infect()  # second call must be a no-op
+	_check(player.infected, "double infection is harmless")
+
 	# --- Raptor takes hits and dies (3 x 18 > 40 hp) ---
 	_check(raptor.is_alive(), "raptor starts alive")
 	raptor.take_damage(18.0, Vector3.FORWARD)
