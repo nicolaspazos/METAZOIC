@@ -40,5 +40,5 @@ theme/custom="res://assets/ui/theme.tres"
 textures/vram_compression/import_etc2_astc=true
 ; PS2 look: render the 3D scene at 45% resolution (~576x324), then upscale.
 ; The psx_post.gdshader dither/quantize filter stacks on top of this.
-scaling_3d/scale=0.45
+scaling_3d/scale=0.58
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2

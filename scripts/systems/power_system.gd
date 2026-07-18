@@ -14,7 +14,7 @@ signal power_absorbed(power: Power)
 enum Power {
 	SHIELD,      ## Triceratops        — a protective barrier / frill shield
 	JAWS,        ## Tyrannosaurus      — a devastating bite attack
-	CLAWS,       ## Velociraptor       — fast slashing claws / lunge
+	CLAWS,       ## Duonychus          — therizinosaur scythe claws / lunge
 	CHARGE,      ## Pachycephalosaurus — a headbutt charge
 	TAIL_SWEEP,  ## Ankylosaurus       — a heavy tail-club sweep
 	SPEED,       ## Alpha Raptor       — enhanced legs and sustained sprint

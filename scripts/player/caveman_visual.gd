@@ -28,6 +28,33 @@ var _torso_base := 0.0
 
 func _ready() -> void:
 	_torso_base = torso.position.y
+	_forge_organics()
+
+
+## Replace the primitive part meshes with lofted organic shapes — real tapering
+## torso, muscled limbs. Materials on the MeshInstances are kept.
+func _forge_organics() -> void:
+	torso.mesh = MeshForge.tube_y([
+		[-0.5, 0.18, 0.14], [-0.32, 0.17, 0.135], [-0.05, 0.23, 0.17],
+		[0.22, 0.27, 0.19], [0.4, 0.22, 0.16], [0.5, 0.06, 0.06]], 12)
+	for pivot in [l_arm, r_arm]:
+		var upper: MeshInstance3D = pivot.get_node("UpperArm")
+		upper.mesh = MeshForge.tube_y([
+			[-0.24, 0.045, 0.045], [-0.12, 0.085, 0.08],
+			[0.06, 0.075, 0.07], [0.2, 0.055, 0.055]], 9)
+		var fore: MeshInstance3D = pivot.get_node("Forearm")
+		fore.mesh = MeshForge.tube_y([
+			[-0.2, 0.04, 0.04], [-0.08, 0.07, 0.065],
+			[0.1, 0.06, 0.055], [0.19, 0.045, 0.045]], 9)
+	for pivot in [l_leg, r_leg]:
+		var thigh: MeshInstance3D = pivot.get_node("Thigh")
+		thigh.mesh = MeshForge.tube_y([
+			[-0.26, 0.06, 0.06], [-0.12, 0.1, 0.1],
+			[0.08, 0.115, 0.11], [0.24, 0.09, 0.09]], 9)
+		var shin: MeshInstance3D = pivot.get_node("Shin")
+		shin.mesh = MeshForge.tube_y([
+			[-0.26, 0.045, 0.05], [-0.1, 0.075, 0.08],
+			[0.1, 0.09, 0.09], [0.24, 0.07, 0.07]], 9)
 
 
 ## The parasite bonds: hair parts to reveal the face, parasite fists grow in.

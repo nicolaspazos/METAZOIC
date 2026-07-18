@@ -53,11 +53,20 @@ func _ready() -> void:
 		_check(player.stamina == initial_stamina - 25.0, "failed spend preserves stamina")
 
 	_check(player.has_method("is_mantling"), "player exposes mantle state")
+	_check(player.has_method("mantle_clearance_mask"), "mantle exposes its occupancy mask")
+	if player.has_method("mantle_clearance_mask"):
+		_check((player.mantle_clearance_mask() & 4) != 0,
+			"mantle landing clearance includes enemy bodies")
 	_check(player.has_method("queue_attack"), "player exposes buffered attack input")
 	_check(player.has_method("attack_phase_name"), "player exposes attack phase")
 	if player.has_method("queue_attack") and player.has_method("attack_phase_name"):
 		player.infected = true
 		player._attacking = true
+		player._attack_phase = player.AttackPhase.WINDUP
+		_check(not player.queue_attack(), "follow-up cannot buffer during wind-up")
+		player._attack_phase = player.AttackPhase.ACTIVE
+		_check(not player.queue_attack(), "follow-up cannot buffer during active frames")
+		player._attack_phase = player.AttackPhase.RECOVERY
 		_check(player.queue_attack(), "one follow-up attack can be buffered")
 		_check(not player.queue_attack(), "attack buffer accepts only one follow-up")
 		_check(player.attack_phase_name() == "recovery", "buffering occurs during recovery")
@@ -65,8 +74,17 @@ func _ready() -> void:
 		player._attack_phase = player.AttackPhase.IDLE
 		player._queued_attack = false
 		player.stamina = 0.0
+		var exhaustion := {"count": 0}
+		player.exhausted.connect(func(): exhaustion.count += 1)
 		_check(not player.queue_attack(true), "heavy attack rejects insufficient stamina")
 		_check(not player._attacking, "rejected heavy attack never enters wind-up")
+		_check(exhaustion.count == 1, "rejected heavy attack emits exhausted feedback")
+		player.stamina = player.max_stamina
+		PowerSystem.unlocked[PowerSystem.Power.CLAWS] = true
+		player._mantling = true
+		player.activate_power(PowerSystem.Power.CLAWS)
+		_check(not player._dashing, "mutation dash cannot start during mantle")
+		player._mantling = false
 
 	_check("SPEED" in PowerSystem.Power, "raptor speed progression power exists")
 	var claw_info: Dictionary = PowerSystem.POWER_INFO.get(PowerSystem.Power.CLAWS, {})
@@ -101,10 +119,23 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_check(boss._enraged, "Duonychus enrages below half health")
 	_check(boss.move_speed > 4.0, "enraged boss becomes more aggressive")
+	boss.state = boss.State.CHASE
+	boss._sweep_cooldown = 0.0
+	boss._physics_process(0.016)
+	_check(boss._sweep_active, "enraged Duonychus telegraphs a claw sweep at close range")
+	_check(not boss._sweep_struck, "claw sweep has a reactable wind-up")
 	boss.take_damage(9999.0, Vector3.FORWARD)
 	_check(PowerSystem.has_power(PowerSystem.Power.CLAWS), "Duonychus grants claws on defeat")
 	_check(not PowerSystem.has_power(PowerSystem.Power.SPEED),
 		"Duonychus does not grant the reserved raptor speed power")
+
+	var main: Node3D = preload("res://scenes/main.tscn").instantiate()
+	var start: Vector3 = main.get_node("Player").position
+	var trigger: Vector3 = main.get_node("CrashSite/InfectionTrigger").position
+	var boss_start: Vector3 = main.get_node("Duonychus").position
+	_check(start.distance_to(trigger) > 12.0, "player starts outside the meteor trigger")
+	_check(start.distance_to(boss_start) > 20.0, "player starts away from the first boss")
+	main.free()
 
 	player.queue_free()
 	boss.queue_free()

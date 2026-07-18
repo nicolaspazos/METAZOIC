@@ -18,42 +18,42 @@ shader = ExtResource("3")
 shader_parameter/albedo_tex = ExtResource("4")
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_fur"]
 shader = ExtResource("3")
 shader_parameter/albedo_tex = ExtResource("5")
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_hair"]
 shader = ExtResource("3")
 shader_parameter/albedo_tex = ExtResource("5")
 shader_parameter/tint = Color(0.42, 0.35, 0.3, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_face"]
 shader = ExtResource("3")
 shader_parameter/albedo_tex = ExtResource("8")
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_bone"]
 shader = ExtResource("3")
 shader_parameter/albedo_tex = ExtResource("6")
 shader_parameter/tint = Color(1.6, 1.55, 1.4, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_parasite"]
 shader = ExtResource("3")
 shader_parameter/albedo_tex = ExtResource("7")
 shader_parameter/tint = Color(1.2, 1, 1, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="CapsuleMesh" id="mesh_torso"]
 radius = 0.27

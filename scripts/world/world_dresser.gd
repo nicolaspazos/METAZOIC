@@ -8,6 +8,8 @@ extends Node3D
 @export var rock_scene: PackedScene
 @export var fern_scene: PackedScene
 @export var bones_scene: PackedScene
+@export var dead_tree_scene: PackedScene
+@export var dead_tree_count := 12
 
 @export var tree_count := 42
 @export var big_tree_count := 9
@@ -32,6 +34,7 @@ func _ready() -> void:
 	_scatter(rock_scene, rock_count, 12.0, 88.0, 0.6, 2.2, rng, terrain)
 	_scatter(fern_scene, fern_count, 8.0, 80.0, 0.8, 1.5, rng, terrain)
 	_scatter(bones_scene, bones_count, 10.0, 70.0, 0.8, 1.6, rng, terrain)
+	_scatter(dead_tree_scene, dead_tree_count, 14.0, 84.0, 0.8, 1.5, rng, terrain)
 
 
 func _scatter(scene: PackedScene, count: int, r_min: float, r_max: float,

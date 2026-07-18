@@ -11,21 +11,21 @@ shader = ExtResource("2")
 shader_parameter/albedo_tex = ExtResource("3")
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_stone"]
 shader = ExtResource("2")
 shader_parameter/albedo_tex = ExtResource("4")
 shader_parameter/tint = Color(0.8, 0.78, 0.76, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_fur"]
 shader = ExtResource("2")
 shader_parameter/albedo_tex = ExtResource("5")
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="CylinderMesh" id="mesh_log"]
 top_radius = 0.09

@@ -14,28 +14,28 @@ shader = ExtResource("2")
 shader_parameter/albedo_tex = ExtResource("3")
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_belly"]
 shader = ExtResource("2")
 shader_parameter/albedo_tex = ExtResource("3")
 shader_parameter/tint = Color(1.3, 1.25, 0.9, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_dark"]
 shader = ExtResource("2")
 shader_parameter/albedo_tex = ExtResource("3")
 shader_parameter/tint = Color(0.55, 0.55, 0.55, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="ShaderMaterial" id="mat_teeth"]
 shader = ExtResource("2")
 shader_parameter/albedo_tex = ExtResource("4")
 shader_parameter/tint = Color(1.7, 1.7, 1.55, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="StandardMaterial3D" id="mat_eye"]
 albedo_color = Color(0.9, 0.7, 0.1, 1)

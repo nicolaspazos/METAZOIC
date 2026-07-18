@@ -7,7 +7,7 @@
 shader = ExtResource("1")
 shader_parameter/albedo_tex = ExtResource("2")
 shader_parameter/tint = Color(1, 1, 1, 1)
-shader_parameter/jitter = 160.0
+shader_parameter/jitter = 280.0
 
 [sub_resource type="QuadMesh" id="quad"]
 size = Vector2(1.5, 1.1)

@@ -55,6 +55,39 @@ func _ready() -> void:
 	_home = global_position
 	_mesh_instances = mesh.find_children("*", "MeshInstance3D")
 	_strafe_side = 1.0 if randf() < 0.5 else -1.0
+	if species_name == "Raptor":
+		_forge_organics()
+
+
+## Replace primitive part meshes with lofted organic shapes (raptor grunts only —
+## bosses define their own bulk). Node rotations map local +Y along each part.
+func _forge_organics() -> void:
+	var body := mesh.get_node_or_null("Body") as MeshInstance3D
+	if body:  # deep-chested body tapering toward the hips (local +Y = forward)
+		body.mesh = MeshForge.tube_y([
+			[-0.62, 0.06, 0.06], [-0.42, 0.21, 0.25], [-0.08, 0.27, 0.31],
+			[0.25, 0.22, 0.26], [0.5, 0.13, 0.15], [0.62, 0.05, 0.05]], 12)
+	for path in ["TailPivot/Tail1", "TailPivot/Tail2Pivot/Tail2",
+			"TailPivot/Tail2Pivot/Tail3Pivot/Tail3"]:
+		var seg := mesh.get_node_or_null(path) as MeshInstance3D
+		if seg:
+			var base: float = [0.115, 0.08, 0.05][
+				["TailPivot/Tail1", "TailPivot/Tail2Pivot/Tail2",
+				"TailPivot/Tail2Pivot/Tail3Pivot/Tail3"].find(path)]
+			seg.mesh = MeshForge.tube_y([
+				[-0.3, base * 0.6, base * 0.7], [-0.1, base, base * 1.15],
+				[0.15, base * 0.85, base], [0.3, base * 0.55, base * 0.65]], 8)
+	for leg_name in ["LeftLegPivot", "RightLegPivot"]:
+		var thigh := mesh.get_node_or_null(leg_name + "/Thigh") as MeshInstance3D
+		if thigh:  # heavy drumstick
+			thigh.mesh = MeshForge.tube_y([
+				[-0.26, 0.05, 0.07], [-0.1, 0.11, 0.15],
+				[0.1, 0.13, 0.16], [0.25, 0.09, 0.12]], 9)
+	for neck_name in ["NeckPivot/NeckLow", "NeckPivot/NeckUp"]:
+		var seg := mesh.get_node_or_null(neck_name) as MeshInstance3D
+		if seg:
+			seg.mesh = MeshForge.tube_y([
+				[-0.17, 0.06, 0.07], [0.0, 0.09, 0.1], [0.17, 0.07, 0.08]], 8)
 
 
 func is_alive() -> bool:
@@ -198,6 +231,11 @@ func take_damage(amount: float, hit_dir: Vector3 = Vector3.ZERO) -> void:
 	_set_flash(0.85)
 	var ft := create_tween()
 	ft.tween_method(_set_flash, 0.85, 0.0, 0.22)
+	# The hide gets progressively carved up and glistening as health drops.
+	var wound := 1.0 - clampf(health / max_health, 0.0, 1.0)
+	for mi in _mesh_instances:
+		if is_instance_valid(mi):
+			mi.set_instance_shader_parameter("wound", wound)
 	if health <= 0.0:
 		_die()
 	else:

@@ -7,7 +7,7 @@ extends SceneTree
 ##
 ## Output goes to assets/textures/. Textures tile seamlessly (4-corner blend).
 
-const S := 128
+const S := 256
 const OUT := "res://assets/textures/"
 
 var rng := RandomNumberGenerator.new()
@@ -166,10 +166,14 @@ func _fern() -> void:
 func _skin() -> void:
 	var base := _noise(60, 0.08, 3)
 	var blotch := _noise(61, 0.04, 2)
+	var scar := _noise(62, 0.045, 2)
 	_paint("skin", func(x, y):
-		var c := Color(0.72, 0.49, 0.33).lerp(Color(0.82, 0.58, 0.4), _t01(base, x, y))
+		var c := Color(0.66, 0.45, 0.31).lerp(Color(0.78, 0.55, 0.38), _t01(base, x, y))
 		if _tiled(blotch, x, y) > 0.4:
-			c = c.lerp(Color(0.62, 0.38, 0.26), 0.35)
+			c = c.lerp(Color(0.55, 0.33, 0.24), 0.35)
+		# Old scars and grime — a body that has survived things.
+		if 1.0 - absf(_tiled(scar, x, y)) > 0.93:
+			c = c.lerp(Color(0.42, 0.18, 0.14), 0.55)
 		return c)
 
 
@@ -186,12 +190,19 @@ func _fur() -> void:
 func _scales() -> void:
 	var bump := _noise(80, 0.22, 2)
 	var stripe := _noise(81, 0.03, 2)
+	var oste := _noise(82, 0.3, 1)
+	var scar2 := _noise(83, 0.05, 2)
 	_paint("scales", func(x, y):
 		var c := Color(0.14, 0.24, 0.11) * (0.85 + 0.35 * _t01(bump, x, y))
 		# Broken vertical striping — classic movie-raptor markings.
 		var s := 0.5 + 0.5 * sin(TAU * (float(x) / S * 3.0)) + _tiled(stripe, x, y) * 0.9
 		if s > 1.05:
 			c *= 0.55
+		# Osteoderm studs catch the light; old wounds streak the hide.
+		if _tiled(oste, x, y) > 0.66:
+			c *= 1.45
+		if 1.0 - absf(_tiled(scar2, x, y)) > 0.94:
+			c = c.lerp(Color(0.3, 0.12, 0.1), 0.6)
 		return c)
 
 

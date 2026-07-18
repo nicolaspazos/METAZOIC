@@ -15,6 +15,7 @@ const MovementRules := preload("res://scripts/player/movement_math.gd")
 
 signal health_changed(current: float, max_value: float)
 signal stamina_changed(current: float, max_value: float)
+signal exhausted
 signal damaged
 signal kills_changed(count: int)
 signal died
@@ -104,6 +105,7 @@ var _mantle_elapsed := 0.0
 var _mantle_duration := 0.34
 var _jump_buffer := 0.0
 var _stamina_regen_block := 0.0
+var _exhausted_feedback_cooldown := 0.0
 
 
 func _ready() -> void:
@@ -171,6 +173,7 @@ func _physics_process(delta: float) -> void:
 	_invuln -= delta
 	_jump_buffer = maxf(0.0, _jump_buffer - delta)
 	_stamina_regen_block -= delta
+	_exhausted_feedback_cooldown -= delta
 	if _stamina_regen_block <= 0.0 and stamina < max_stamina:
 		var before := stamina
 		stamina = MovementRules.regenerate_resource(
@@ -304,14 +307,13 @@ func queue_attack(heavy := false) -> bool:
 	if not infected or _dashing or _mantling:
 		return false
 	if heavy and not can_spend_stamina(STAMINA_COST_HEAVY):
+		_reject_exhausted()
 		return false
 	if _attacking:
-		if _queued_attack:
+		if _attack_phase != AttackPhase.RECOVERY or _queued_attack:
 			return false
 		_queued_attack = true
 		_queued_heavy = heavy
-		if _attack_phase == AttackPhase.IDLE:
-			_attack_phase = AttackPhase.RECOVERY
 		return true
 	_try_attack(heavy)
 	return true
@@ -392,6 +394,7 @@ func dodge() -> void:
 	if _dashing or _attacking or _mantling or _now() < _dodge_ready:
 		return
 	if not spend_stamina(STAMINA_COST_DODGE):
+		_reject_exhausted()
 		return
 	_dodge_ready = _now() + 1.2
 	var input_dir := Vector2.ZERO
@@ -433,7 +436,7 @@ func cooldown_frac(power: int) -> float:
 func activate_power(power: int) -> void:
 	if not PowerSystem.has_power(power):
 		return
-	if _attacking or _dashing or _shielding:
+	if _attacking or _dashing or _shielding or _mantling:
 		return
 	if not has_cooldown_elapsed(power):
 		return
@@ -443,6 +446,7 @@ func activate_power(power: int) -> void:
 	elif power == PowerSystem.Power.CHARGE:
 		stamina_cost = STAMINA_COST_CHARGE
 	if stamina_cost > 0.0 and not spend_stamina(stamina_cost):
+		_reject_exhausted()
 		return
 	# Cooldowns shrink as the mutation is leveled with blood.
 	_power_ready[power] = _now() \
@@ -621,6 +625,10 @@ func is_mantling() -> bool:
 	return _mantling
 
 
+func mantle_clearance_mask() -> int:
+	return collision_mask
+
+
 func try_begin_mantle(direction: Vector3) -> bool:
 	if _mantling or _attacking or _dashing or direction.length_squared() < 0.1:
 		return false
@@ -645,10 +653,18 @@ func try_begin_mantle(direction: Vector3) -> bool:
 	var rise: float = top_hit.position.y - global_position.y
 	if rise < 0.35 or rise > 1.65:
 		return false
+	var candidate: Vector3 = top_hit.position + direction * 0.45 + Vector3.UP * 0.08
+	var clearance := PhysicsShapeQueryParameters3D.new()
+	clearance.shape = $CollisionShape3D.shape
+	clearance.transform = Transform3D(global_transform.basis, candidate + Vector3.UP)
+	clearance.collision_mask = mantle_clearance_mask()
+	clearance.exclude = exclude
+	if not space.intersect_shape(clearance, 1).is_empty():
+		return false
 	_mantling = true
 	_mantle_elapsed = 0.0
 	_mantle_start = global_position
-	_mantle_target = top_hit.position + direction * 0.45 + Vector3.UP * 0.08
+	_mantle_target = candidate
 	velocity = Vector3.ZERO
 	_mantle_ready = 0.6
 	Gore.puff(global_position + direction * 0.5, 6)
@@ -677,6 +693,14 @@ func spend_stamina(amount: float) -> bool:
 	_stamina_regen_block = stamina_regen_delay
 	stamina_changed.emit(stamina, max_stamina)
 	return true
+
+
+func _reject_exhausted() -> void:
+	if _exhausted_feedback_cooldown > 0.0:
+		return
+	_exhausted_feedback_cooldown = 0.3
+	exhausted.emit()
+	Sfx.play("heartbeat", -12.0, 1.45, 0.02, "ui")
 
 
 # ------------------------------------------------------------------ damage & death

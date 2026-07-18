@@ -89,6 +89,7 @@ func _ready() -> void:
 		return
 	_player.health_changed.connect(_on_health_changed)
 	_player.stamina_changed.connect(_on_stamina_changed)
+	_player.exhausted.connect(_on_exhausted)
 	_player.damaged.connect(_on_damaged)
 	if _player.has_signal("parasite_bonded"):
 		_player.parasite_bonded.connect(_on_parasite_bonded)
@@ -362,6 +363,12 @@ func _on_health_changed(current: float, max_value: float) -> void:
 
 func _on_stamina_changed(current: float, max_value: float) -> void:
 	_stamina_fill.size.x = _stamina_width * clampf(current / max_value, 0.0, 1.0)
+
+
+func _on_exhausted() -> void:
+	_stamina_fill.color = Color(0.85, 0.12, 0.08, 1.0)
+	var t := create_tween()
+	t.tween_property(_stamina_fill, "color", Color(0.34, 0.43, 0.38, 0.95), 0.35)
 
 
 func _on_damaged() -> void:

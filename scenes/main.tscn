@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3 uid="uid://c0metazoicmain00"]
+[gd_scene load_steps=36 format=3 uid="uid://c0metazoicmain00"]
 
 [ext_resource type="PackedScene" uid="uid://b0metazoicplayer0" path="res://scenes/player/player.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://craptormetaz0001" path="res://scenes/enemies/raptor.tscn" id="2"]
@@ -18,6 +18,7 @@
 [ext_resource type="PackedScene" uid="uid://ccampmetazoic001" path="res://scenes/world/camp.tscn" id="16"]
 [ext_resource type="Script" path="res://scripts/world/infection_trigger.gd" id="17"]
 [ext_resource type="PackedScene" uid="uid://cbigtreemetaz001" path="res://scenes/world/big_tree.tscn" id="18"]
+[ext_resource type="PackedScene" uid="uid://cdeadtreemetaz01" path="res://scenes/world/dead_tree.tscn" id="19"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.012, 0.008, 0.025, 1)
@@ -116,6 +117,7 @@ rock_scene = ExtResource("7")
 fern_scene = ExtResource("8")
 bones_scene = ExtResource("13")
 big_tree_scene = ExtResource("18")
+dead_tree_scene = ExtResource("19")
 
 [node name="SkyDressing" type="Node3D" parent="."]
 script = ExtResource("14")

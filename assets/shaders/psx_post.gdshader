@@ -24,6 +24,8 @@ void fragment() {
 	float threshold = BAYER[px.x % 4][px.y % 4] / 16.0 - 0.5;
 	col += threshold * dither_strength / color_levels;
 	col = floor(col * color_levels + 0.5) / color_levels;
+	// Dark-fantasy contrast curve — crush shadows, keep highlights biting.
+	col = mix(col, col * col * (3.0 - 2.0 * col), 0.42);
 	// Keep the moonlit world cold while preserving parasite/fire reds.
 	col *= vec3(0.92, 0.94, 1.04);
 	// CRT flavor: faint scanlines + corner vignette.
