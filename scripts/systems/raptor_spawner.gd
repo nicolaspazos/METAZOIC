@@ -40,5 +40,11 @@ func _spawn_at(marker: Node3D) -> void:
 		return
 	var raptor := raptor_scene.instantiate()
 	add_child(raptor)
-	raptor.global_position = marker.global_position + Vector3.UP * 0.5
+	# Snap to the procedural terrain so raptors never spawn underground.
+	var pos := marker.global_position
+	var terrain := get_tree().get_first_node_in_group("terrain")
+	var y := pos.y + 0.5
+	if terrain:
+		y = terrain.height_at(pos.x, pos.z) + 0.8
+	raptor.global_position = Vector3(pos.x, y, pos.z)
 	_spawned.append(raptor)

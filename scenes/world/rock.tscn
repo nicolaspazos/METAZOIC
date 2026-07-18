@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://crockmetazoic001"]
+
+[ext_resource type="Shader" path="res://assets/shaders/psx_lit.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://assets/textures/rock.png" id="2"]
+
+[sub_resource type="ShaderMaterial" id="mat_rock"]
+shader = ExtResource("1")
+shader_parameter/albedo_tex = ExtResource("2")
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/uv_scale = Vector2(1, 1)
+shader_parameter/jitter = 160.0
+
+[sub_resource type="BoxMesh" id="rock_mesh"]
+size = Vector3(2.4, 2.4, 2.4)
+
+[sub_resource type="BoxShape3D" id="rock_shape"]
+size = Vector3(2.4, 2.4, 2.4)
+
+[node name="Rock" type="StaticBody3D"]
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9239, 0, 0.3827, 0, 1, 0, -0.3827, 0, 0.9239, 0, 0.8, 0)
+mesh = SubResource("rock_mesh")
+surface_material_override/0 = SubResource("mat_rock")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.9239, 0, 0.3827, 0, 1, 0, -0.3827, 0, 0.9239, 0, 0.8, 0)
+shape = SubResource("rock_shape")

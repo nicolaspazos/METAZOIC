@@ -39,9 +39,29 @@ Concept and roadmap live in [GAME_DESIGN.md](GAME_DESIGN.md).
   game's hook: `Power` enum, metadata, absorbed set. `absorb(p)` / `has_power(p)`.
 - **`boss_dinosaur.gd`** is the base class for bosses. On death it calls
   `PowerSystem.absorb(self.power)`. Concrete bosses `extend` it.
-- **PS2 look** = `rendering/scaling_3d/scale=0.4` in project.godot (low-res render) +
-  `assets/shaders/psx_post.gdshader` (color quantization + Bayer dither) on a fullscreen
-  ColorRect in the `PSXPost` CanvasLayer + heavy fog and saturated materials.
+- **PS2 look** = four layers working together:
+  1. `rendering/scaling_3d/scale=0.4` (low-res render, upscaled)
+  2. `assets/shaders/psx_lit.gdshader` on every surface — vertex snapping (polygon
+     jitter), affine texture warping, nearest-filtered textures. Variants:
+     `psx_foliage.gdshader` (alpha-scissor, double-sided), `psx_terrain.gdshader`
+     (grass/dirt blend by vertex color).
+  3. `assets/shaders/psx_post.gdshader` (color quantization + Bayer dither fullscreen).
+  4. Procedural 128px textures from `tools/asset_gen/generate_textures.gd`.
+- **Terrain** (`scripts/world/terrain.gd`, group "terrain") is generated at load:
+  faceted heightfield, crater at (0,-18) with floor y=-1.5, arena flattening, mountain
+  ring. Query ground height with `terrain.height_at(x, z)`. `world_dresser.gd` scatters
+  trees/rocks/ferns (scenes in `scenes/world/`). Both deterministic (fixed seeds).
+  IMPORTANT: terrain triangles wind clockwise seen from above (Godot front face).
+- **Audio**: `Sfx` autoload (`scripts/systems/sfx.gd`) — `Sfx.play(name)` /
+  `Sfx.play3d(name, pos)`. All WAVs synthesized by `tools/asset_gen/generate_audio.gd`;
+  loops (music/wind/hum) get their loop flags set at runtime in Sfx._ready.
+- **Powers**: implemented in player.gd (`activate_power`, `start_shield`/`stop_shield`,
+  cooldowns in `POWER_COOLDOWNS`). The Alpha Raptor (`alpha_raptor.gd`, red tint,
+  boss bar) grants CLAWS on death. HUD (`hud.gd`) builds the power bar, absorb banner,
+  and boss bar in code; static bars live in main.tscn.
+- **Hit flash / per-instance tinting**: psx_lit has `instance uniform` params `flash`
+  and `tint_i` — set via `set_instance_shader_parameter` on each MeshInstance3D
+  (see raptor.gd `_set_flash`, alpha_raptor.gd `_ready`).
 
 ## Gameplay conventions
 

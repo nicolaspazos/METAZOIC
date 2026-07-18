@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://cfernmetazoic001"]
+
+[ext_resource type="Shader" path="res://assets/shaders/psx_foliage.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://assets/textures/fern.png" id="2"]
+
+[sub_resource type="ShaderMaterial" id="mat_fern"]
+shader = ExtResource("1")
+shader_parameter/albedo_tex = ExtResource("2")
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/jitter = 160.0
+
+[sub_resource type="QuadMesh" id="quad"]
+size = Vector2(1.5, 1.1)
+
+[node name="Fern" type="Node3D"]
+
+[node name="QuadA" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+mesh = SubResource("quad")
+surface_material_override/0 = SubResource("mat_fern")
+
+[node name="QuadB" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0.52, 0)
+mesh = SubResource("quad")
+surface_material_override/0 = SubResource("mat_fern")

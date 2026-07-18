@@ -17,6 +17,11 @@ var move_amount := 0.0
 
 var _t := 0.0
 var _attack_tween: Tween
+var _torso_base := 0.0
+
+
+func _ready() -> void:
+	_torso_base = torso.position.y
 
 
 func _process(delta: float) -> void:
@@ -29,7 +34,7 @@ func _process(delta: float) -> void:
 	if _attack_tween == null or not _attack_tween.is_running():
 		r_arm.rotation = Vector3(swing * 0.8, 0.0, 0.0)
 	# Idle breathing bob.
-	torso.position.y = 1.2 + sin(_t * 2.0) * 0.02
+	torso.position.y = _torso_base + sin(_t * 2.0) * 0.02
 
 
 ## Play a club swing. index 0 = overhead smash, 1 = horizontal swipe.

@@ -18,6 +18,8 @@ config/icon="res://icon.svg"
 PowerSystem="*res://scripts/systems/power_system.gd"
 ; Blood, gibs, hit-stop — all impact FX, generated in code.
 Gore="*res://scripts/systems/gore.gd"
+; All sound: SFX pools, music, ambient loops (assets from tools/asset_gen/).
+Sfx="*res://scripts/systems/sfx.gd"
 
 [display]
 

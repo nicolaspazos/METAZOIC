@@ -30,14 +30,20 @@ var _anim_t := 0.0
 @onready var mesh: Node3D = $Mesh
 @onready var neck: Node3D = $Mesh/NeckPivot
 @onready var tail: Node3D = $Mesh/TailPivot
+@onready var tail2: Node3D = $Mesh/TailPivot/Tail2Pivot
+@onready var tail3: Node3D = $Mesh/TailPivot/Tail2Pivot/Tail3Pivot
 @onready var l_leg: Node3D = $Mesh/LeftLegPivot
 @onready var r_leg: Node3D = $Mesh/RightLegPivot
+
+## Cached for the instance-uniform hit flash (psx_lit's `flash` parameter).
+var _mesh_instances: Array = []
 
 
 func _ready() -> void:
 	add_to_group("enemies")
 	health = max_health
 	_home = global_position
+	_mesh_instances = mesh.find_children("*", "MeshInstance3D")
 
 
 func is_alive() -> bool:
@@ -78,6 +84,7 @@ func _physics_process(delta: float) -> void:
 				_move_horizontal(Vector3.ZERO, delta)
 			if dist < aggro_range:
 				state = State.CHASE
+				Sfx.play3d("growl", global_position, -2.0)
 		State.CHASE:
 			if dist > aggro_range * 1.8:
 				state = State.WANDER
@@ -96,6 +103,7 @@ func _physics_process(delta: float) -> void:
 			_state_timer -= delta
 			if not _has_bitten and player and dist < 2.6:
 				_has_bitten = true
+				Sfx.play3d("bite", global_position)
 				if player.has_method("take_damage"):
 					player.take_damage(bite_damage, global_position)
 					Gore.spray(player.global_position + Vector3.UP, to_player.normalized(), 10)
@@ -125,7 +133,10 @@ func _process(delta: float) -> void:
 	var swing := sin(_anim_t) * 0.8 * clampf(run_ratio, 0.1, 1.2)
 	l_leg.rotation.x = swing
 	r_leg.rotation.x = -swing
-	tail.rotation.y = sin(_anim_t * 0.6) * 0.35
+	# Whip-like tail: each segment lags the previous one.
+	tail.rotation.y = sin(_anim_t * 0.6) * 0.3
+	tail2.rotation.y = sin(_anim_t * 0.6 - 0.7) * 0.35
+	tail3.rotation.y = sin(_anim_t * 0.6 - 1.4) * 0.4
 	neck.rotation.x = sin(_anim_t * 2.0) * 0.06 * run_ratio
 
 
@@ -135,19 +146,31 @@ func take_damage(amount: float, hit_dir: Vector3 = Vector3.ZERO) -> void:
 		return
 	health -= amount
 	Gore.spray(global_position + Vector3.UP * 0.9, (hit_dir + Vector3.UP * 0.4).normalized(), 20)
+	Sfx.play3d("raptor_hurt", global_position, -2.0)
 	velocity += hit_dir * 6.0 + Vector3.UP * 2.5
-	# Flinch: quick scale punch on the visual.
+	# Flinch: quick scale punch + red hit flash (instance shader uniform).
 	mesh.scale = Vector3.ONE * 1.15
 	var t := create_tween()
 	t.tween_property(mesh, "scale", Vector3.ONE, 0.15)
+	_set_flash(0.85)
+	var ft := create_tween()
+	ft.tween_method(_set_flash, 0.85, 0.0, 0.22)
 	if health <= 0.0:
 		_die()
 	elif state == State.WANDER:
 		state = State.CHASE
 
 
+## Set the red hit-flash amount on every mesh part (psx_lit instance uniform).
+func _set_flash(a: float) -> void:
+	for mi in _mesh_instances:
+		if is_instance_valid(mi):
+			mi.set_instance_shader_parameter("flash", Color(1.0, 0.25, 0.15, a))
+
+
 func _die() -> void:
 	state = State.DEAD
+	Sfx.play3d("raptor_die", global_position, 2.0)
 	Gore.burst(global_position + Vector3.UP * 0.8)
 	Gore.pool(global_position)
 	Gore.gibs(global_position + Vector3.UP * 0.7, 4)

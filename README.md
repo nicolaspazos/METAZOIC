@@ -2,6 +2,8 @@
 
 A PS2-style, third-person, open-world action game built in **Godot 4**.
 
+![METAZOIC screenshot](docs/screenshot.png)
+
 > A meteorite breaks apart in the atmosphere and seeds Earth with a venom-like parasite.
 > It grants powers to a lone caveman — and to a handful of apex dinosaurs. Hunt the
 > infected boss dinosaurs, defeat them, and **absorb their powers**: the Triceratops' shield,
@@ -44,7 +46,26 @@ Press **F5** (or the ▶ button). You control the caveman:
 | **W A S D**  | Move (camera-relative)    |
 | **Mouse**    | Orbit camera              |
 | **Space**    | Jump                      |
+| **LMB**      | Club attack (2-swing combo) |
+| **Q** (hold) | Ceratops Shield — blocks frontal damage |
+| **E**        | Raptor Claws — shredding dash |
+| **F**        | Tyrant Jaws — devouring bite (executes weakened prey) |
+| **Shift**    | Pachy Charge — ram that sends enemies flying |
+| **R**        | Ankylo Tail — 360° sweep |
+| **P**        | *(debug)* unlock all powers |
 | **Esc**      | Free / recapture the mouse |
+
+Powers unlock by killing the dinosaur that carries them — start with the
+**Alpha Raptor** guarding the meteor crater (grants Raptor Claws).
+
+## Regenerating assets
+
+All textures and audio are procedurally generated — no binary sources to lose:
+
+```powershell
+godot --headless --path . -s tools/asset_gen/generate_textures.gd
+godot --headless --path . -s tools/asset_gen/generate_audio.gd
+```
 
 ## Project layout
 

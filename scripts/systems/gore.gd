@@ -5,13 +5,16 @@ extends Node
 ## scenes to keep in sync. Call from anywhere:
 ##   Gore.spray(pos, dir)    — directional blood spray on a hit
 ##   Gore.burst(pos)         — big omnidirectional fountain on a death
-##   Gore.pool(pos)          — persistent blood pool on the ground
+##   Gore.pool(pos)          — persistent blood pool, raycast-snapped to the ground
 ##   Gore.gibs(pos, n)       — small physical chunks that bounce and settle
+##   Gore.spark(pos, dir)    — green parasite sparks (shield blocks, power FX)
+##   Gore.streak(pos, dir, color) — a fading motion streak (dashes, sweeps)
 ##   Gore.hitstop()          — brief global freeze-frame for impact feel
 
 var _blood_mat: StandardMaterial3D
 var _gib_mat: StandardMaterial3D
 var _pool_mat: StandardMaterial3D
+var _spark_mat: StandardMaterial3D
 var _hitstopped := false
 
 
@@ -28,28 +31,48 @@ func _ready() -> void:
 	_pool_mat.albedo_color = Color(0.3, 0.01, 0.02)
 	_pool_mat.roughness = 0.4
 
+	_spark_mat = StandardMaterial3D.new()
+	_spark_mat.albedo_color = Color(0.5, 1.0, 0.6)
+	_spark_mat.emission_enabled = true
+	_spark_mat.emission = Color(0.4, 1.0, 0.5)
+	_spark_mat.emission_energy_multiplier = 2.0
+
 
 ## Directional spray — use when something takes a hit. `dir` points away from the attacker.
 func spray(pos: Vector3, dir: Vector3, amount: int = 18) -> void:
-	_emit_particles(pos, dir, amount, 35.0, 4.0, 9.0, 0.6)
+	_emit_particles(pos, dir, amount, 35.0, 4.0, 9.0, 0.6, _blood_mat)
 
 
 ## Big omnidirectional fountain — use on deaths.
 func burst(pos: Vector3, amount: int = 48) -> void:
-	_emit_particles(pos, Vector3.UP, amount, 180.0, 3.0, 8.0, 0.9)
+	_emit_particles(pos, Vector3.UP, amount, 180.0, 3.0, 8.0, 0.9, _blood_mat)
+
+
+## Green parasite sparks — shield blocks and power impacts.
+func spark(pos: Vector3, dir: Vector3 = Vector3.UP, amount: int = 14) -> void:
+	_emit_particles(pos, dir, amount, 60.0, 3.0, 7.0, 0.4, _spark_mat)
 
 
 ## A dark pool that grows on the ground and lingers, then fades.
-## NOTE: assumes the local floor is at y = 0 (true for the starting area).
+## Raycasts down to sit on the terrain wherever the kill happened.
 func pool(pos: Vector3) -> void:
+	var ground_y := pos.y
+	var scene := get_tree().current_scene
+	if scene is Node3D:
+		var space := (scene as Node3D).get_world_3d().direct_space_state
+		var query := PhysicsRayQueryParameters3D.create(
+			pos + Vector3.UP * 1.5, pos + Vector3.DOWN * 8.0, 1)
+		var hit := space.intersect_ray(query)
+		if hit:
+			ground_y = hit.position.y
 	var disc := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
-	cyl.height = 0.02
+	cyl.height = 0.04
 	cyl.top_radius = 1.0
 	cyl.bottom_radius = 1.0
 	cyl.material = _pool_mat
 	disc.mesh = cyl
-	_attach(disc, Vector3(pos.x, 0.03, pos.z))
+	_attach(disc, Vector3(pos.x, ground_y + 0.05, pos.z))
 	if not disc.is_inside_tree():
 		return
 	disc.scale = Vector3(0.1, 1.0, 0.1)
@@ -91,6 +114,29 @@ func gibs(pos: Vector3, count: int = 5) -> void:
 		get_tree().create_timer(8.0 + randf() * 3.0).timeout.connect(gib.queue_free)
 
 
+## A glowing motion streak that stretches along `dir` and fades — dash/sweep trails.
+func streak(pos: Vector3, dir: Vector3, color: Color, length := 1.6) -> void:
+	var mi := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.14, 0.14, length)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 1.5
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	box.material = mat
+	mi.mesh = box
+	_attach(mi, pos)
+	if not mi.is_inside_tree():
+		return
+	if dir.length() > 0.01 and absf(dir.normalized().dot(Vector3.UP)) < 0.99:
+		mi.look_at(pos + dir, Vector3.UP)
+	var t := mi.create_tween()
+	t.tween_property(mi, "transparency", 1.0, 0.3)
+	t.tween_callback(mi.queue_free)
+
+
 ## Brief global slow-motion freeze for impact feel. Safe to call every hit.
 func hitstop(time_scale: float = 0.05, duration: float = 0.07) -> void:
 	if _hitstopped:
@@ -104,7 +150,8 @@ func hitstop(time_scale: float = 0.05, duration: float = 0.07) -> void:
 
 
 func _emit_particles(pos: Vector3, dir: Vector3, amount: int, spread: float,
-		vel_min: float, vel_max: float, lifetime: float) -> void:
+		vel_min: float, vel_max: float, lifetime: float,
+		mat: StandardMaterial3D) -> void:
 	var p := GPUParticles3D.new()
 	p.one_shot = true
 	p.explosiveness = 1.0
@@ -123,7 +170,7 @@ func _emit_particles(pos: Vector3, dir: Vector3, amount: int, spread: float,
 
 	var mesh := BoxMesh.new()
 	mesh.size = Vector3(0.09, 0.09, 0.09)
-	mesh.material = _blood_mat
+	mesh.material = mat
 	p.draw_pass_1 = mesh
 
 	_attach(p, pos)
