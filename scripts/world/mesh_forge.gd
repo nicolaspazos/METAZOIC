@@ -9,6 +9,7 @@ extends RefCounted
 ## [y, radius_x, radius_z] rings from bottom to top. Ends should taper small.
 ## UVs wrap around (u) and run along the length (v) so textures flow naturally.
 static func tube_y(profile: Array, radial := 10) -> ArrayMesh:
+	radial = maxi(radial, 14)  # fidelity floor — smooth silhouettes everywhere
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var uvs := PackedVector2Array()
@@ -56,6 +57,7 @@ static func tube_y(profile: Array, radial := 10) -> ArrayMesh:
 ## Loft along local +Z (snouts, heads). `profile` = [z, radius_x, radius_y] rings.
 ## Winding is mirrored vs tube_y (axis swap flips handedness).
 static func tube_z(profile: Array, radial := 10) -> ArrayMesh:
+	radial = maxi(radial, 14)
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var uvs := PackedVector2Array()

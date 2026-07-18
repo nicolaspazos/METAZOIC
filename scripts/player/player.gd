@@ -30,8 +30,8 @@ const STAMINA_COST_CLAWS := 20.0
 const STAMINA_COST_CHARGE := 38.0
 
 @export_group("Movement")
-@export var move_speed := 6.0
-@export var jump_velocity := 6.5
+@export var move_speed := 6.6
+@export var jump_velocity := 7.0
 @export var gravity := 18.0
 @export var mouse_sensitivity := 0.0025
 @export var turn_speed := 12.0
@@ -136,12 +136,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				if event.pressed:
 					_jump_buffer = 0.14
 			KEY_ESCAPE:
-				if event.pressed:
-					Input.mouse_mode = (
-						Input.MOUSE_MODE_VISIBLE
-						if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
-						else Input.MOUSE_MODE_CAPTURED
-					)
+				pass  # Esc belongs to the HUD now — it opens the pause menu
 			KEY_Q:
 				if event.pressed:
 					start_shield()
@@ -739,13 +734,54 @@ func _die() -> void:
 	Sfx.play3d("player_hurt", global_position, 4.0, 0.7)
 	Gore.burst(global_position + Vector3.UP)
 	Gore.pool(global_position)
-	# Arcade-style: respawn at the start of the area with full health.
+	get_tree().call_group("hud", "_show_banner", "YOU  DIED")
+	# Souls rules: your harvested blood stays where you fell. Go take it back.
+	if Stats.blood > 0:
+		_drop_bloodstain(global_position, Stats.blood)
+		Stats.blood = 0
+	# Wake again at the camp.
 	global_position = _spawn_point
 	velocity = Vector3.ZERO
 	health = max_health
 	_invuln = 1.5
 	stop_shield()
 	health_changed.emit(health, max_health)
+
+
+## A glowing bloodstain holding the dropped blood — walk into it to reclaim.
+func _drop_bloodstain(pos: Vector3, amount: int) -> void:
+	var stain := Area3D.new()
+	stain.collision_layer = 0
+	stain.collision_mask = 2  # player only
+	var cs := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = 1.4
+	cs.shape = sphere
+	stain.add_child(cs)
+	var mi := MeshInstance3D.new()
+	var pillar := CylinderMesh.new()
+	pillar.top_radius = 0.06
+	pillar.bottom_radius = 0.3
+	pillar.height = 2.2
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.9, 0.08, 0.05, 0.8)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.1, 0.06)
+	mat.emission_energy_multiplier = 2.0
+	pillar.material = mat
+	mi.mesh = pillar
+	mi.position.y = 1.1
+	stain.add_child(mi)
+	get_tree().current_scene.add_child(stain)
+	stain.global_position = pos
+	stain.body_entered.connect(func(body: Node3D):
+		if body.is_in_group("player"):
+			Stats.blood += amount
+			Sfx.play("absorb", 0.0, 0.9)
+			get_tree().call_group("hud", "_show_banner", "BLOOD  RECLAIMED")
+			stain.queue_free())
 
 
 ## Called via call_group by dying enemies (species + blood bounty).

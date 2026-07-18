@@ -89,7 +89,7 @@ func _ready() -> void:
 		_pool_2d.append(p)
 
 	_start_loop("music", -9.0)
-	_start_loop("wind", -17.0)
+	_start_loop("wind", -24.0)  # a presence, not a broadcast
 
 
 func play(sfx_name: String, volume_db := 0.0, pitch := 1.0, pitch_var := 0.05,

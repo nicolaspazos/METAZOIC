@@ -10,7 +10,7 @@ extends Node3D
 ## itself to the "terrain" group and must sit ABOVE spawners in the scene tree.
 
 const SIZE := 180.0
-const RES := 90                       # quads per side
+const RES := 116                       # quads per side
 const CRATER_POS := Vector2(0.0, -18.0)
 const CRATER_FLOOR := -1.5
 const POND_POS := Vector2(26.0, 26.0)

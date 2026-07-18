@@ -110,8 +110,11 @@ func _input(event: InputEvent) -> void:
 				_close_wheel()
 		elif event.keycode == KEY_C and event.pressed:
 			_toggle_menu()
-		elif event.keycode == KEY_ESCAPE and event.pressed and _menu_open:
-			_toggle_menu()
+		elif event.keycode == KEY_ESCAPE and event.pressed:
+			if _menu_open:
+				_toggle_menu()
+			else:
+				_toggle_pause()
 
 
 func _process(delta: float) -> void:
@@ -235,6 +238,77 @@ func _build_wheel() -> void:
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(lbl)
 		_wheel_labels[power] = box
+
+
+# ------------------------------------------------------------------ pause menu
+
+var _pause_panel: Panel
+var _paused_by_menu := false
+
+
+func _toggle_pause() -> void:
+	if _wheel.visible:
+		return
+	if _pause_panel == null:
+		_build_pause_panel()
+	_paused_by_menu = not _paused_by_menu
+	_pause_panel.visible = _paused_by_menu
+	get_tree().paused = _paused_by_menu
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if _paused_by_menu \
+		else Input.MOUSE_MODE_CAPTURED
+
+
+func _build_pause_panel() -> void:
+	_pause_panel = Panel.new()
+	_pause_panel.anchor_left = 0.5
+	_pause_panel.anchor_right = 0.5
+	_pause_panel.anchor_top = 0.5
+	_pause_panel.anchor_bottom = 0.5
+	_pause_panel.offset_left = -180
+	_pause_panel.offset_right = 180
+	_pause_panel.offset_top = -140
+	_pause_panel.offset_bottom = 140
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.03, 0.03, 0.96)
+	style.border_color = Color(0.45, 0.1, 0.08)
+	style.set_border_width_all(2)
+	_pause_panel.add_theme_stylebox_override("panel", style)
+	_pause_panel.visible = false
+	add_child(_pause_panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.anchor_right = 1.0
+	vbox.anchor_bottom = 1.0
+	vbox.offset_left = 30
+	vbox.offset_right = -30
+	vbox.offset_top = 24
+	vbox.offset_bottom = -24
+	vbox.add_theme_constant_override("separation", 14)
+	_pause_panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "M E T A Z O I C"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(0.85, 0.2, 0.15))
+	vbox.add_child(title)
+
+	var resume := Button.new()
+	resume.text = "Return to the Hunt"
+	resume.pressed.connect(_toggle_pause)
+	vbox.add_child(resume)
+
+	var codex := Button.new()
+	codex.text = "The Parasite Remembers  (C)"
+	codex.pressed.connect(func():
+		_toggle_pause()
+		_toggle_menu())
+	vbox.add_child(codex)
+
+	var quit := Button.new()
+	quit.text = "Abandon the Valley"
+	quit.pressed.connect(func(): get_tree().quit())
+	vbox.add_child(quit)
 
 
 # ------------------------------------------------------------------ character menu

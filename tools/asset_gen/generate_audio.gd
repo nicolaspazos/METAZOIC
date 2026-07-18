@@ -265,15 +265,19 @@ func _sfx() -> void:
 # ---------------------------------------------------------------- ambient loops
 
 func _ambient() -> void:
-	# Wind: slowly-breathing low-passed noise. 8s, seamless.
-	var b := _buf(8.0)
+	# Wind: a deep 24s moan, heavily filtered (no rain-like hiss), with two slow
+	# breathing cycles that both complete whole periods → the loop never pops
+	# and takes far longer to feel repetitive.
+	var b := _buf(24.0)
 	var y := 0.0
+	var y2 := 0.0
 	for i in b.size():
 		var t := float(i) / SR
-		var cutoff := 0.04 + 0.03 * sin(TAU * t / 4.0)  # 2 whole cycles → loops clean
+		var cutoff := 0.008 + 0.006 * sin(TAU * t / 12.0) + 0.004 * sin(TAU * t / 8.0)
 		y += cutoff * (rng.randf_range(-1.0, 1.0) - y)
-		b[i] = y * (0.7 + 0.3 * sin(TAU * t / 8.0))
-	_save("wind", _loopify(b, 0.25))
+		y2 += 0.02 * (y - y2)  # second pole — kills the hiss entirely
+		b[i] = y2 * (0.55 + 0.3 * sin(TAU * t / 24.0) + 0.15 * sin(TAU * t / 6.0))
+	_save("wind", _loopify(b, 0.5))
 
 	# Crash-site hum: alien drone from the meteor shards. 4s, seamless.
 	b = _buf(4.0)
