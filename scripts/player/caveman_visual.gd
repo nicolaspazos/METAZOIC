@@ -34,7 +34,7 @@ func play_roll() -> void:
 	_rolling = true
 	rotation.x = 0.0
 	var t := create_tween()
-	t.tween_property(self, "rotation:x", -TAU, 0.42) \
+	t.tween_property(self, "rotation:x", -TAU, 0.34) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	t.tween_callback(func():
 		rotation.x = 0.0

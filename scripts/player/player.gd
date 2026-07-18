@@ -30,7 +30,7 @@ const STAMINA_COST_CLAWS := 20.0
 const STAMINA_COST_CHARGE := 38.0
 
 @export_group("Movement")
-@export var move_speed := 6.6
+@export var move_speed := 7.2
 @export var jump_velocity := 7.0
 @export var gravity := 18.0
 @export var mouse_sensitivity := 0.0025
@@ -120,6 +120,12 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# While locked on, the camera OWNS yaw (no fighting the tracking lerp).
+		# A hard horizontal flick (> 40px) breaks the lock deliberately.
+		if _lock_target:
+			if absf(event.relative.x) > 40.0:
+				_lock_target = null
+			return
 		yaw_pivot.rotate_y(-event.relative.x * mouse_sensitivity)
 		_pitch = clampf(_pitch - event.relative.y * mouse_sensitivity, -1.2, 0.5)
 		pitch_pivot.rotation.x = _pitch
@@ -224,7 +230,7 @@ func _physics_process(delta: float) -> void:
 
 	# Smooth acceleration toward the target velocity (no instant starts/stops).
 	# Grounded turns are snappy; airborne there's still real control (parkour feel).
-	var accel := 45.0 if is_on_floor() else 18.0
+	var accel := 62.0 if is_on_floor() else 22.0  # Prototype-fluid starts
 	if direction.length() > 0.01:
 		velocity = MovementRules.horizontal_velocity(
 			velocity, direction * speed, accel, delta)
@@ -269,13 +275,19 @@ func _physics_process(delta: float) -> void:
 		_lock_target = null
 	if _lock_target:
 		var to_t := _lock_target.global_position - global_position
-		to_t.y = 0.0
-		if to_t.length() > 0.5:
+		var flat := Vector3(to_t.x, 0.0, to_t.z)
+		if flat.length() > 0.5:
+			# Fast, critically-tight yaw tracking — the target stays centered.
 			yaw_pivot.rotation.y = lerp_angle(
-				yaw_pivot.rotation.y, atan2(-to_t.x, -to_t.z), 6.0 * delta)
+				yaw_pivot.rotation.y, atan2(-flat.x, -flat.z), 14.0 * delta)
+			# Auto-frame pitch: look slightly down onto the target.
+			var desired_pitch := clampf(
+				atan2(to_t.y - 1.0, flat.length()) - 0.18, -0.55, 0.15)
+			_pitch = lerpf(_pitch, desired_pitch, 6.0 * delta)
+			pitch_pivot.rotation.x = _pitch
 			if not _attacking:
 				visual.rotation.y = lerp_angle(
-					visual.rotation.y, atan2(to_t.x, to_t.z), 14.0 * delta)
+					visual.rotation.y, atan2(flat.x, flat.z), 16.0 * delta)
 
 	_fall_speed = -velocity.y
 	move_and_slide()
@@ -421,6 +433,41 @@ func _toggle_lock() -> void:
 			_lock_target = enemy
 	if _lock_target:
 		Sfx.play("block", -12.0, 1.6)
+		_attach_lock_marker()
+
+
+## Spinning red diamond above the locked target — you always know who's marked.
+func _attach_lock_marker() -> void:
+	var marker := MeshInstance3D.new()
+	marker.name = "LockMarker"
+	var cone := CylinderMesh.new()
+	cone.top_radius = 0.14
+	cone.bottom_radius = 0.0
+	cone.height = 0.3
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.12, 0.08)
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.15, 0.08)
+	mat.emission_energy_multiplier = 2.5
+	cone.material = mat
+	marker.mesh = cone
+	marker.position.y = 2.4
+	_lock_target.add_child(marker)
+	var t := marker.create_tween().set_loops()
+	t.tween_property(marker, "rotation:y", TAU, 1.2).from(0.0)
+	# The marker dies with the lock (checked each frame below).
+	var cleanup := func():
+		if not is_instance_valid(marker):
+			return
+		if _lock_target == null or not is_instance_valid(_lock_target) \
+				or marker.get_parent() != _lock_target:
+			marker.queue_free()
+	var timer := Timer.new()
+	timer.wait_time = 0.2
+	timer.autostart = true
+	marker.add_child(timer)
+	timer.timeout.connect(cleanup)
 
 
 func dodge() -> void:
@@ -445,7 +492,7 @@ func dodge() -> void:
 	if dir.length() < 0.01:
 		dir = cam_basis.z  # no input → backstep away from where we're looking
 	dir = dir.normalized()
-	velocity = dir * 13.0 + Vector3.UP * 3.0
+	velocity = dir * 15.5 + Vector3.UP * 3.0
 	_invuln = maxf(_invuln, 0.35)
 	visual.play_roll()
 	Gore.puff(global_position, 8)
