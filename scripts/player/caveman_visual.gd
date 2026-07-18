@@ -55,6 +55,27 @@ func _forge_organics() -> void:
 		shin.mesh = MeshForge.tube_y([
 			[-0.26, 0.045, 0.05], [-0.1, 0.075, 0.08],
 			[0.1, 0.09, 0.09], [0.24, 0.07, 0.07]], 9)
+	# A real skull: heavy cranium, hollowed cheeks, tapered jaw.
+	var head: MeshInstance3D = $Head
+	head.mesh = MeshForge.tube_y([
+		[-0.17, 0.1, 0.11], [-0.06, 0.14, 0.155], [0.05, 0.16, 0.17],
+		[0.14, 0.145, 0.155], [0.2, 0.06, 0.07]], 12)
+	# Shaggy matted crown that hugs the skull instead of a floating helmet.
+	var crown: MeshInstance3D = $HairTop
+	crown.mesh = MeshForge.tube_y([
+		[-0.2, 0.15, 0.17], [-0.05, 0.19, 0.2], [0.08, 0.175, 0.185],
+		[0.15, 0.08, 0.1]], 10)
+	# Broad working hands (paws, not marbles).
+	for pivot in [l_arm, r_arm]:
+		var hand: MeshInstance3D = pivot.get_node("Hand")
+		hand.mesh = MeshForge.tube_y([
+			[-0.1, 0.05, 0.06], [-0.02, 0.078, 0.088],
+			[0.05, 0.062, 0.075], [0.1, 0.03, 0.045]], 8)
+	# Tuck the deltoids into the torso silhouette.
+	for shoulder_name in ["ShoulderL", "ShoulderR"]:
+		var s: MeshInstance3D = get_node(shoulder_name)
+		s.scale = Vector3(0.85, 0.72, 0.95)
+		s.position.x *= 0.9
 
 
 ## The parasite bonds: hair parts to reveal the face, parasite fists grow in.
@@ -70,11 +91,25 @@ func _process(delta: float) -> void:
 	var idle_sway := sin(_t * 2.0) * 0.04 * (1.0 - move_amount)
 	l_leg.rotation.x = swing
 	r_leg.rotation.x = -swing
+	# Knees flex as each leg swings back — no more stiff peg legs.
+	var l_shin := l_leg.get_node("Shin") as Node3D
+	var r_shin := r_leg.get_node("Shin") as Node3D
+	l_shin.rotation.x = -0.08 + maxf(0.0, -sin(_t)) * 0.85 * move_amount
+	r_shin.rotation.x = -0.08 + maxf(0.0, sin(_t)) * 0.85 * move_amount
 	# Arms are owned by the attack tween while one is running.
 	if _attack_tween == null or not _attack_tween.is_running():
 		l_arm.rotation = Vector3(-swing * 0.8 + idle_sway, 0.0, 0.07)
 		r_arm.rotation = Vector3(swing * 0.8 + idle_sway, 0.0, -0.07)
 		torso.rotation.y = 0.0
+		# Elbows trail the swing.
+		(l_arm.get_node("Forearm") as Node3D).rotation.x = \
+			-0.3 - maxf(0.0, swing) * 0.5
+		(r_arm.get_node("Forearm") as Node3D).rotation.x = \
+			-0.3 - maxf(0.0, -swing) * 0.5
+	# Whole-body weight: gallop bob, forward lean, hip roll.
+	position.y = -absf(sin(_t)) * 0.05 * move_amount
+	rotation.x = -0.1 * move_amount
+	rotation.z = sin(_t) * 0.045 * move_amount
 	# Idle breathing bob.
 	torso.position.y = _torso_base + sin(_t * 2.0) * 0.02
 	# Loincloth flaps sway with the run.

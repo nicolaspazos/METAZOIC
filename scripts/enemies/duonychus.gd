@@ -17,9 +17,39 @@ var _sweep_cooldown := 2.0
 
 func _ready() -> void:
 	super()
+	_forge_boss_bulk()
 	# Parasite corruption: dark hide veined red.
 	for mi in _mesh_instances:
 		mi.set_instance_shader_parameter("tint_i", Color(0.75, 0.6, 0.6))
+
+
+## The boss gets its own lofted anatomy — a mountain of muscle, not capsules.
+func _forge_boss_bulk() -> void:
+	var body := mesh.get_node_or_null("Body") as MeshInstance3D
+	if body:  # barrel gut swelling from hips to a deep chest
+		body.mesh = MeshForge.tube_y([
+			[-1.15, 0.22, 0.26], [-0.7, 0.56, 0.62], [-0.1, 0.68, 0.74],
+			[0.5, 0.56, 0.6], [0.95, 0.36, 0.4], [1.15, 0.16, 0.18]], 14)
+	for arm_path in ["LeftArmPivot/Arm", "RightArmPivot/Arm"]:
+		var arm := mesh.get_node_or_null(arm_path) as MeshInstance3D
+		if arm:  # scythe-bearing arms thick with muscle
+			arm.mesh = MeshForge.tube_y([
+				[-0.55, 0.09, 0.09], [-0.25, 0.17, 0.16],
+				[0.1, 0.15, 0.14], [0.45, 0.11, 0.11]], 9)
+	var neck_low := mesh.get_node_or_null("NeckPivot/NeckLow") as MeshInstance3D
+	if neck_low:
+		neck_low.mesh = MeshForge.tube_y([
+			[-0.42, 0.15, 0.17], [0.0, 0.22, 0.24], [0.42, 0.17, 0.19]], 10)
+	var neck_up := mesh.get_node_or_null("NeckPivot/NeckUp") as MeshInstance3D
+	if neck_up:
+		neck_up.mesh = MeshForge.tube_y([
+			[-0.35, 0.11, 0.12], [0.0, 0.155, 0.165], [0.35, 0.12, 0.13]], 10)
+	for thigh_path in ["LeftLegPivot/Thigh", "RightLegPivot/Thigh"]:
+		var thigh := mesh.get_node_or_null(thigh_path) as MeshInstance3D
+		if thigh:
+			thigh.mesh = MeshForge.tube_y([
+				[-0.45, 0.15, 0.19], [-0.15, 0.26, 0.31],
+				[0.15, 0.28, 0.31], [0.42, 0.19, 0.23]], 10)
 
 
 func _process(delta: float) -> void:

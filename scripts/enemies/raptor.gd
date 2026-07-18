@@ -88,6 +88,28 @@ func _forge_organics() -> void:
 		if seg:
 			seg.mesh = MeshForge.tube_y([
 				[-0.17, 0.06, 0.07], [0.0, 0.09, 0.1], [0.17, 0.07, 0.08]], 8)
+	# One continuous predator head: brow-heavy skull flowing into a long snout.
+	var head := mesh.get_node_or_null("NeckPivot/HeadPivot/Head") as MeshInstance3D
+	if head:
+		head.mesh = MeshForge.tube_z([
+			[-0.14, 0.09, 0.09], [-0.02, 0.125, 0.12], [0.1, 0.11, 0.1],
+			[0.24, 0.075, 0.07], [0.4, 0.055, 0.05], [0.5, 0.02, 0.02]], 10)
+		var old_snout := mesh.get_node_or_null("NeckPivot/HeadPivot/Snout")
+		if old_snout:
+			old_snout.visible = false
+	# Muscled shins and arms instead of sticks.
+	for limb in ["LeftLegPivot/Shin", "RightLegPivot/Shin"]:
+		var shin := mesh.get_node_or_null(limb) as MeshInstance3D
+		if shin:
+			shin.mesh = MeshForge.tube_y([
+				[-0.22, 0.035, 0.05], [-0.05, 0.055, 0.075],
+				[0.12, 0.05, 0.065], [0.2, 0.04, 0.05]], 8)
+	for arm_name in ["ArmL", "ArmR"]:
+		var arm := mesh.get_node_or_null(arm_name) as MeshInstance3D
+		if arm:
+			arm.mesh = MeshForge.tube_y([
+				[-0.14, 0.025, 0.025], [-0.04, 0.048, 0.045],
+				[0.07, 0.04, 0.038], [0.13, 0.028, 0.028]], 7)
 
 
 func is_alive() -> bool:
@@ -192,11 +214,22 @@ func _process(delta: float) -> void:
 	var swing := sin(_anim_t) * 0.8 * clampf(run_ratio, 0.1, 1.2)
 	l_leg.rotation.x = swing
 	r_leg.rotation.x = -swing
-	# Whip-like tail: each segment lags the previous one.
+	# Knees flex through the stride — real digitigrade gait, not pendulum legs.
+	var l_shin := l_leg.get_node("Shin") as Node3D
+	var r_shin := r_leg.get_node("Shin") as Node3D
+	l_shin.rotation.x = -0.5 + maxf(0.0, -sin(_anim_t)) * 0.7 * run_ratio
+	r_shin.rotation.x = -0.5 + maxf(0.0, sin(_anim_t)) * 0.7 * run_ratio
+	# Gallop: the body bounces and pitches with each stride...
+	mesh.position.y = absf(sin(_anim_t)) * 0.06 * run_ratio
+	mesh.rotation.x = sin(_anim_t * 2.0) * 0.03 * run_ratio
+	# ...while the head stays eerily level — bird-of-prey stabilization.
+	neck.rotation.x = -mesh.rotation.x * 2.2 + sin(_anim_t * 2.0) * 0.04 * run_ratio
+	neck.position.y = 1.1 - mesh.position.y * 0.7
+	# Whip-like tail: each segment lags the previous one, counter-balancing.
 	tail.rotation.y = sin(_anim_t * 0.6) * 0.3
 	tail2.rotation.y = sin(_anim_t * 0.6 - 0.7) * 0.35
 	tail3.rotation.y = sin(_anim_t * 0.6 - 1.4) * 0.4
-	neck.rotation.x = sin(_anim_t * 2.0) * 0.06 * run_ratio
+	tail.rotation.x = -mesh.rotation.x * 1.5
 	# Jaw eases toward its target (wide during lunges, chattering at rest).
 	jaw.rotation.x = lerpf(jaw.rotation.x, _jaw_target, 12.0 * delta)
 
