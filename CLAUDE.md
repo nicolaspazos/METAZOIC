@@ -24,18 +24,36 @@ Concept and roadmap live in [GAME_DESIGN.md](GAME_DESIGN.md).
 ## How the pieces connect
 
 - **Entry point:** `project.godot` → `run/main_scene` = `res://scenes/main.tscn`.
-- **`scenes/main.tscn`** is the world: `WorldEnvironment` + `DirectionalLight3D` (Sun) +
-  a `Ground` static body + some rocks + an instance of the player scene.
-- **`scenes/player/player.tscn`** is the caveman. Hierarchy:
-  - `Player` (`CharacterBody3D`, script `player.gd`)
-    - `CollisionShape3D` (capsule)
-    - `Mesh` (`Node3D`) — visual body; rotated to face movement (kept separate from collision)
-    - `YawPivot` (`Node3D`) → `PitchPivot` (`Node3D`) → `Camera3D` — the orbit camera rig
-- **`PowerSystem`** (autoload singleton, `scripts/systems/power_system.gd`) is the spine of
-  the game's hook: it holds the `Power` enum, per-power metadata, and the set of absorbed
-  powers. Call `PowerSystem.absorb(power)` / `PowerSystem.has_power(power)` from anywhere.
+- **`scenes/main.tscn`** is the starting area: dusk `WorldEnvironment` (fog + glow), Sun,
+  ground, meteor crash site (emissive shards + green light), rocks, trees, invisible arena
+  walls, the player, a raptor `Spawner`, the `HUD` CanvasLayer, and the `PSXPost` layer.
+- **`scenes/player/player.tscn`** is the caveman (`player.gd`). The body never rotates —
+  `Mesh` (script `caveman_visual.gd`, class `CavemanVisual`) turns to face movement and is
+  procedurally animated (walk cycle, club swings). `YawPivot → PitchPivot → Camera3D` is the
+  mouse-orbit rig. `Mesh/AttackHitbox` (Area3D) is the club's damage volume.
+- **`scenes/enemies/raptor.tscn`** (`raptor.gd`) is the grunt enemy: state machine
+  WANDER → CHASE → LUNGE → RECOVER → DEAD, procedural leg/tail/head animation.
+- **`Gore`** (autoload, `scripts/systems/gore.gd`) is all blood/impact FX, generated in
+  code: `spray(pos, dir)`, `burst(pos)`, `pool(pos)`, `gibs(pos, n)`, `hitstop()`.
+- **`PowerSystem`** (autoload, `scripts/systems/power_system.gd`) is the spine of the
+  game's hook: `Power` enum, metadata, absorbed set. `absorb(p)` / `has_power(p)`.
 - **`boss_dinosaur.gd`** is the base class for bosses. On death it calls
   `PowerSystem.absorb(self.power)`. Concrete bosses `extend` it.
+- **PS2 look** = `rendering/scaling_3d/scale=0.4` in project.godot (low-res render) +
+  `assets/shaders/psx_post.gdshader` (color quantization + Bayer dither) on a fullscreen
+  ColorRect in the `PSXPost` CanvasLayer + heavy fog and saturated materials.
+
+## Gameplay conventions
+
+- **Facing:** the front of every character model is **local +Z** on its `Mesh` node.
+- **Collision layers:** 1 = world, 2 = player, 4 = enemies. Player mask 5; raptor mask 7;
+  player attack hitbox mask 4; gibs/corpses mask 1.
+- **Groups:** the player is in `"player"`, enemies add themselves to `"enemies"`.
+- **Damage flow:** attacker calls `take_damage(amount, dir_or_pos)`. Victims spawn their
+  own blood via `Gore`. Enemies announce death with
+  `get_tree().call_group("player", "on_enemy_killed")` (heals the player — the parasite feeds).
+- **Animation is procedural** (code + tweens), not baked `AnimationPlayer` data — keep it
+  that way unless there's a strong reason; it's far easier to edit as text.
 
 ## Common tasks — where to start
 
@@ -66,10 +84,16 @@ Godot can import and check the project headlessly (once the editor is installed 
 ```powershell
 # Import assets and quit — surfaces script/scene parse errors.
 & <path-to-godot.exe> --headless --path . --editor --quit
+
+# Run the game headless briefly — surfaces runtime errors.
+& <path-to-godot.exe> --headless --quit-after 120 --path .
+
+# Combat smoke test — asserts damage/death/kill-reward/PowerSystem behavior. Exit 0 = pass.
+& <path-to-godot.exe> --headless --path . res://tools/combat_smoke_test.tscn
 ```
 
-There is no automated test suite yet. Prefer small, self-contained changes and describe how
-to see them working in-editor (press F5).
+Run all three after any gameplay change. Extend `tools/combat_smoke_test.gd` when adding
+mechanics — it's the only automated safety net.
 
 ## Conventions recap
 

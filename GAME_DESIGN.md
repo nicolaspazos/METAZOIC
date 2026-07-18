@@ -49,13 +49,17 @@ extends [`scripts/enemies/boss_dinosaur.gd`](scripts/enemies/boss_dinosaur.gd).
 
 - [x] Third-person player controller (walk, jump, camera orbit)
 - [x] Power-absorption framework (`PowerSystem` singleton + boss base class)
-- [ ] Player combat (melee attack that calls `boss.take_damage`)
-- [ ] Health / damage for the player
+- [x] Player combat — club combo (overhead smash / side swipe), hitbox, hit-stop, camera shake
+- [x] Health / damage for the player (knockback, i-frames, HUD bar, damage flash, respawn)
+- [x] Enemy AI — raptor grunts (wander → chase → lunge-bite → recover) + respawning spawner
+- [x] Gore system — blood sprays, death fountains, persistent pools, physics gibs (`Gore` autoload)
+- [x] PS2 presentation pass — 40% render scale, color-quantize + Bayer-dither post shader, dusk fog
+- [x] Starting area — meteor crash site (glowing shards), rocks, trees, walled arena
+- [x] Headless combat smoke test (`tools/combat_smoke_test.tscn`)
 - [ ] First boss: Triceratops (shield power)
 - [ ] Ability activation & UI (show owned powers, bind to inputs)
-- [ ] Enemy AI (basic chase + attack)
 - [ ] The meteorite intro / opening cinematic
-- [ ] World art pass (terrain, foliage, PS2-style materials)
+- [ ] Bigger world (regions beyond the starting arena)
 - [ ] Audio (ambient, combat SFX, music)
 
 ## Narrative Beats (draft)

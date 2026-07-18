@@ -18,7 +18,8 @@ func _ready() -> void:
 
 
 ## Apply damage. Call this from the player's attacks.
-func take_damage(amount: float) -> void:
+## `hit_dir` points from the attacker toward this boss (for knockback/blood in subclasses).
+func take_damage(amount: float, hit_dir: Vector3 = Vector3.ZERO) -> void:
 	health = maxf(0.0, health - amount)
 	if health <= 0.0:
 		die()

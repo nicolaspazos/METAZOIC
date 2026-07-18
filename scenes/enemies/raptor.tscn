@@ -1,0 +1,115 @@
+[gd_scene load_steps=13 format=3 uid="uid://craptormetaz0001"]
+
+[ext_resource type="Script" path="res://scripts/enemies/raptor.gd" id="1"]
+
+[sub_resource type="CapsuleShape3D" id="shape_body"]
+radius = 0.45
+height = 1.4
+
+[sub_resource type="StandardMaterial3D" id="mat_scale"]
+albedo_color = Color(0.25, 0.55, 0.2, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="mat_dark"]
+albedo_color = Color(0.15, 0.35, 0.13, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="mat_eye"]
+albedo_color = Color(0.9, 0.7, 0.1, 1)
+emission_enabled = true
+emission = Color(1, 0.75, 0.1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="BoxMesh" id="mesh_body"]
+size = Vector3(0.42, 0.5, 1.05)
+
+[sub_resource type="BoxMesh" id="mesh_head"]
+size = Vector3(0.26, 0.26, 0.34)
+
+[sub_resource type="BoxMesh" id="mesh_snout"]
+size = Vector3(0.18, 0.16, 0.34)
+
+[sub_resource type="BoxMesh" id="mesh_tail"]
+size = Vector3(0.16, 0.18, 0.95)
+
+[sub_resource type="BoxMesh" id="mesh_leg"]
+size = Vector3(0.14, 0.62, 0.2)
+
+[sub_resource type="BoxMesh" id="mesh_arm"]
+size = Vector3(0.08, 0.26, 0.08)
+
+[sub_resource type="BoxMesh" id="mesh_eye"]
+size = Vector3(0.06, 0.06, 0.06)
+
+[node name="Raptor" type="CharacterBody3D"]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("shape_body")
+
+[node name="Mesh" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("mesh_body")
+surface_material_override/0 = SubResource("mat_scale")
+
+[node name="NeckPivot" type="Node3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0.5)
+
+[node name="Head" type="MeshInstance3D" parent="Mesh/NeckPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0.22)
+mesh = SubResource("mesh_head")
+surface_material_override/0 = SubResource("mat_scale")
+
+[node name="Snout" type="MeshInstance3D" parent="Mesh/NeckPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.13, 0.52)
+mesh = SubResource("mesh_snout")
+surface_material_override/0 = SubResource("mat_dark")
+
+[node name="EyeLeft" type="MeshInstance3D" parent="Mesh/NeckPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, 0.24, 0.28)
+mesh = SubResource("mesh_eye")
+surface_material_override/0 = SubResource("mat_eye")
+
+[node name="EyeRight" type="MeshInstance3D" parent="Mesh/NeckPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.24, 0.28)
+mesh = SubResource("mesh_eye")
+surface_material_override/0 = SubResource("mat_eye")
+
+[node name="TailPivot" type="Node3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.5)
+
+[node name="Tail" type="MeshInstance3D" parent="Mesh/TailPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5)
+mesh = SubResource("mesh_tail")
+surface_material_override/0 = SubResource("mat_dark")
+
+[node name="LeftLegPivot" type="Node3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.62, 0.05)
+
+[node name="Leg" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+mesh = SubResource("mesh_leg")
+surface_material_override/0 = SubResource("mat_dark")
+
+[node name="RightLegPivot" type="Node3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0.62, 0.05)
+
+[node name="Leg" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+mesh = SubResource("mesh_leg")
+surface_material_override/0 = SubResource("mat_dark")
+
+[node name="ArmLeft" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.78, 0.48)
+mesh = SubResource("mesh_arm")
+surface_material_override/0 = SubResource("mat_scale")
+
+[node name="ArmRight" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.78, 0.48)
+mesh = SubResource("mesh_arm")
+surface_material_override/0 = SubResource("mat_scale")

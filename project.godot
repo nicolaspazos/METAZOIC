@@ -16,6 +16,8 @@ config/icon="res://icon.svg"
 
 ; Global singleton that tracks which powers the player has absorbed.
 PowerSystem="*res://scripts/systems/power_system.gd"
+; Blood, gibs, hit-stop — all impact FX, generated in code.
+Gore="*res://scripts/systems/gore.gd"
 
 [display]
 
@@ -25,4 +27,7 @@ window/size/viewport_height=720
 [rendering]
 
 textures/vram_compression/import_etc2_astc=true
+; PS2 look: render the 3D scene at 40% resolution (~512x288), then upscale.
+; The psx_post.gdshader dither/quantize filter stacks on top of this.
+scaling_3d/scale=0.4
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2
