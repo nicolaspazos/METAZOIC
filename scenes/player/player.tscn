@@ -396,8 +396,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
 [node name="SpringArm3D" type="SpringArm3D" parent="YawPivot/PitchPivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.55, 0)
 collision_mask = 1
-spring_length = 4.4
+spring_length = 5.4
 
 [node name="Camera3D" type="Camera3D" parent="YawPivot/PitchPivot/SpringArm3D"]
-fov = 70.0
+fov = 66.0
 far = 160.0

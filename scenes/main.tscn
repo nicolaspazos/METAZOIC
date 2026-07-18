@@ -34,14 +34,14 @@ background_mode = 2
 sky = SubResource("sky")
 ambient_light_source = 3
 ambient_light_color = Color(0.34, 0.38, 0.5, 1)
-ambient_light_energy = 0.62
+ambient_light_energy = 0.8
 tonemap_mode = 2
 glow_enabled = true
 glow_intensity = 0.82
 fog_enabled = true
 fog_light_color = Color(0.12, 0.075, 0.1, 1)
 fog_light_energy = 0.86
-fog_density = 0.009
+fog_density = 0.0065
 
 [sub_resource type="CylinderMesh" id="scorch_mesh"]
 top_radius = 6.0
@@ -104,7 +104,7 @@ environment = SubResource("env")
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.7648, -0.3637, 0.5317, 0, 0.8253, 0.5646, -0.6442, -0.4318, 0.6312, 0, 25, 0)
 light_color = Color(0.5, 0.55, 0.72, 1)
-light_energy = 0.92
+light_energy = 1.18
 shadow_enabled = true
 
 [node name="Terrain" type="Node3D" parent="."]

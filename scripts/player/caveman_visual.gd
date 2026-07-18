@@ -24,6 +24,21 @@ var move_amount := 0.0
 var _t := 0.0
 var _attack_tween: Tween
 var _torso_base := 0.0
+var _rolling := false
+
+
+## Soulslike dodge roll — a full forward tumble.
+func play_roll() -> void:
+	if _rolling:
+		return
+	_rolling = true
+	rotation.x = 0.0
+	var t := create_tween()
+	t.tween_property(self, "rotation:x", -TAU, 0.42) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t.tween_callback(func():
+		rotation.x = 0.0
+		_rolling = false)
 
 
 func _ready() -> void:
@@ -108,7 +123,8 @@ func _process(delta: float) -> void:
 			-0.3 - maxf(0.0, -swing) * 0.5
 	# Whole-body weight: gallop bob, forward lean, hip roll.
 	position.y = -absf(sin(_t)) * 0.05 * move_amount
-	rotation.x = -0.1 * move_amount
+	if not _rolling:
+		rotation.x = -0.1 * move_amount
 	rotation.z = sin(_t) * 0.045 * move_amount
 	# Idle breathing bob.
 	torso.position.y = _torso_base + sin(_t * 2.0) * 0.02

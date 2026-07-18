@@ -98,6 +98,8 @@ var _club_prev := Vector3.ZERO
 var equipped_mutation: int = PowerSystem.Power.CLAWS
 var _coyote := 0.0
 var _mantle_ready := 0.0
+## Soulslike lock-on target (middle mouse). Camera and body track it.
+var _lock_target: Node3D = null
 var _mantling := false
 var _mantle_start := Vector3.ZERO
 var _mantle_target := Vector3.ZERO
@@ -129,6 +131,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			queue_attack()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			queue_attack(true)
+		elif event.button_index == MOUSE_BUTTON_MIDDLE:
+			_toggle_lock()
 		return
 	if event is InputEventKey and not event.echo:
 		match event.keycode:
@@ -257,6 +261,22 @@ func _physics_process(delta: float) -> void:
 	else:
 		_club_prev = Vector3.ZERO
 
+	# Lock-on: the camera glides to keep the target centered and the body squares
+	# up to it — strafing combat, the soulslike heartbeat.
+	if _lock_target and (not is_instance_valid(_lock_target)
+			or not _lock_target.is_alive()
+			or global_position.distance_to(_lock_target.global_position) > 26.0):
+		_lock_target = null
+	if _lock_target:
+		var to_t := _lock_target.global_position - global_position
+		to_t.y = 0.0
+		if to_t.length() > 0.5:
+			yaw_pivot.rotation.y = lerp_angle(
+				yaw_pivot.rotation.y, atan2(-to_t.x, -to_t.z), 6.0 * delta)
+			if not _attacking:
+				visual.rotation.y = lerp_angle(
+					visual.rotation.y, atan2(to_t.x, to_t.z), 14.0 * delta)
+
 	_fall_speed = -velocity.y
 	move_and_slide()
 
@@ -380,11 +400,29 @@ func _strike(heavy := false) -> void:
 		_trauma = maxf(_trauma, 0.55)
 	if hit:
 		Sfx.play3d("hit", global_position, 0.0)
-		Gore.hitstop(0.05, 0.1 if heavy else 0.07)
-		_trauma = maxf(_trauma, 0.7 if heavy else 0.5)
+		# Heavy, deliberate impact — soulslike weight.
+		Gore.hitstop(0.05, 0.14 if heavy else 0.09)
+		_trauma = maxf(_trauma, 0.75 if heavy else 0.55)
 
 
 ## Quick evasive burst (Ctrl) — brief i-frames, moves with input or backsteps.
+## Middle mouse: lock onto the nearest living enemy in range, or release.
+func _toggle_lock() -> void:
+	if _lock_target:
+		_lock_target = null
+		return
+	var best_dist := 22.0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not (enemy is Node3D) or not enemy.has_method("is_alive") or not enemy.is_alive():
+			continue
+		var d: float = global_position.distance_to(enemy.global_position)
+		if d < best_dist:
+			best_dist = d
+			_lock_target = enemy
+	if _lock_target:
+		Sfx.play("block", -12.0, 1.6)
+
+
 func dodge() -> void:
 	if _dashing or _attacking or _mantling or _now() < _dodge_ready:
 		return
@@ -409,6 +447,7 @@ func dodge() -> void:
 	dir = dir.normalized()
 	velocity = dir * 13.0 + Vector3.UP * 3.0
 	_invuln = maxf(_invuln, 0.35)
+	visual.play_roll()
 	Gore.puff(global_position, 8)
 	Sfx.play3d("dash", global_position, -8.0, 1.3)
 
