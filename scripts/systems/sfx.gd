@@ -34,6 +34,27 @@ const PATHS := {
 	"music": "res://assets/audio/music.wav",
 }
 const LOOPED := ["wind", "hum", "music"]
+const CATEGORY_BUDGET := {
+	"combat": 8,
+	"creature": 5,
+	"footstep": 3,
+	"ui": 3,
+	"ambience": 2,
+}
+const SFX_CATEGORIES := {
+	"step": "footstep",
+	"land": "footstep",
+	"bird1": "ambience",
+	"bird2": "ambience",
+	"chitter": "ambience",
+	"growl": "creature",
+	"raptor_hurt": "creature",
+	"raptor_die": "creature",
+	"distant_roar": "creature",
+	"heartbeat": "ui",
+	"absorb": "ui",
+	"block": "combat",
+}
 
 var _streams := {}
 var _pool_3d: Array[AudioStreamPlayer3D] = []
@@ -71,11 +92,14 @@ func _ready() -> void:
 	_start_loop("wind", -17.0)
 
 
-func play(sfx_name: String, volume_db := 0.0, pitch := 1.0, pitch_var := 0.05) -> void:
+func play(sfx_name: String, volume_db := 0.0, pitch := 1.0, pitch_var := 0.05,
+		category := "") -> void:
 	if not _streams.has(sfx_name):
 		return
-	var p := _pool_2d[_idx_2d]
+	var resolved := _resolve_category(sfx_name, category)
+	var p := _pick_2d_voice(resolved)
 	_idx_2d = (_idx_2d + 1) % _pool_2d.size()
+	p.set_meta("sfx_category", resolved)
 	p.stream = _streams[sfx_name]
 	p.volume_db = volume_db
 	p.pitch_scale = pitch * (1.0 + randf_range(-pitch_var, pitch_var))
@@ -83,16 +107,65 @@ func play(sfx_name: String, volume_db := 0.0, pitch := 1.0, pitch_var := 0.05) -
 
 
 func play3d(sfx_name: String, pos: Vector3, volume_db := 0.0, pitch := 1.0,
-		pitch_var := 0.08) -> void:
+		pitch_var := 0.08, category := "") -> void:
 	if not _streams.has(sfx_name):
 		return
-	var p := _pool_3d[_idx_3d]
+	var resolved := _resolve_category(sfx_name, category)
+	var p := _pick_3d_voice(resolved)
 	_idx_3d = (_idx_3d + 1) % _pool_3d.size()
+	p.set_meta("sfx_category", resolved)
 	p.global_position = pos
 	p.stream = _streams[sfx_name]
 	p.volume_db = volume_db
 	p.pitch_scale = pitch * (1.0 + randf_range(-pitch_var, pitch_var))
 	p.play()
+
+
+func category_budget(category: String) -> int:
+	return int(CATEGORY_BUDGET.get(category, CATEGORY_BUDGET["combat"]))
+
+
+func _resolve_category(sfx_name: String, requested: String) -> String:
+	return requested if not requested.is_empty() else str(SFX_CATEGORIES.get(sfx_name, "combat"))
+
+
+func _pick_2d_voice(category: String) -> AudioStreamPlayer:
+	var categories: Array[String] = []
+	var playing: Array[bool] = []
+	for voice in _pool_2d:
+		categories.append(str(voice.get_meta("sfx_category", "")))
+		playing.append(voice.playing)
+	var index := choose_voice_index(categories, playing, category,
+		category_budget(category), _idx_2d)
+	return _pool_2d[index]
+
+
+func _pick_3d_voice(category: String) -> AudioStreamPlayer3D:
+	var categories: Array[String] = []
+	var playing: Array[bool] = []
+	for voice in _pool_3d:
+		categories.append(str(voice.get_meta("sfx_category", "")))
+		playing.append(voice.playing)
+	var index := choose_voice_index(categories, playing, category,
+		category_budget(category), _idx_3d)
+	return _pool_3d[index]
+
+
+func choose_voice_index(categories: Array, playing: Array, category: String,
+		budget: int, cursor: int) -> int:
+	var first_idle := -1
+	var same_category: Array[int] = []
+	for i in mini(categories.size(), playing.size()):
+		if bool(playing[i]):
+			if str(categories[i]) == category:
+				same_category.append(i)
+		elif first_idle < 0:
+			first_idle = i
+	if same_category.size() >= budget:
+		return same_category[0]
+	if first_idle >= 0:
+		return first_idle
+	return wrapi(cursor, 0, categories.size())
 
 
 func _start_loop(sfx_name: String, volume_db: float) -> void:

@@ -265,9 +265,62 @@ func _ambient() -> void:
 # ---------------------------------------------------------------- music
 
 func _music() -> void:
-	# Primal dusk-hunt loop in E minor pentatonic. 24 bars @ 95 BPM ≈ 61s.
-	# Structure: drums+drone (0-3) → +bass (4-7) → melody A (8-15) →
-	# section B: double-time percussion + high melody (16-23) → loops.
+	_music_dark()
+
+
+## Dark-fantasy score — slow ritual taiko, an abyssal tritone drone, tolling
+## phrygian bells, and a distant detuned choir. Prehistoric dark souls.
+func _music_dark() -> void:
+	var spb := 60.0 / 70.0            # 70 BPM — a funeral pace
+	var bar := spb * 4.0
+	var bars := 16
+	var len := bar * bars             # ≈ 54.9s
+	var b := _buf(len + 0.1)
+
+	# Abyssal drone: E1 root + Bb1 (the tritone — the devil's interval) + E2.
+	for i in int(len * SR):
+		var t := float(i) / SR
+		var sw := 0.7 + 0.3 * sin(TAU * t / (len / 4.0))
+		b[i] += (sin(TAU * 41.2 * t) * 0.15 + sin(TAU * 58.27 * t) * 0.06
+			+ sin(TAU * 82.41 * t) * 0.05) * sw
+
+	# Ritual taiko — huge, slow, sparse.
+	for bi in bars:
+		var t0 := bi * bar
+		_tone(b, t0, 0.5, 110, 32, 1.0)
+		_burst(b, t0, 0.35, 0.3, 0.18, 0.03)
+		if bi % 2 == 1:
+			_tone(b, t0 + 2.5 * spb, 0.4, 95, 30, 0.7)
+		if bi % 4 == 3:
+			_tone(b, t0 + 3.5 * spb, 0.35, 120, 35, 0.85)
+			_tone(b, t0 + 3.75 * spb, 0.3, 110, 33, 0.6)
+
+	# Tolling bells — E phrygian (E F G Bb), long decays, from bar 4.
+	var bells := [
+		[4.0, 164.81], [5.5, 174.61], [7.0, 164.81], [8.0, 233.08],
+		[9.5, 196.0], [11.0, 174.61], [12.5, 164.81], [14.0, 155.56],
+	]
+	for bell in bells:
+		var t: float = bell[0] * bar
+		var f: float = bell[1]
+		_tone(b, t, 2.8, f, f, 0.28, 0, 0.0, 0.01)
+		_tone(b, t, 2.2, f * 2.76, f * 2.76, 0.05, 0, 0.0, 0.01)  # bell partial
+
+	# Distant choir swell across the back half — detuned cluster, barely there.
+	var choir_start := 8.0 * bar
+	for i in range(int(choir_start * SR), int(len * SR)):
+		var t := float(i) / SR
+		var p := (t - choir_start) / (len - choir_start)
+		var env := pow(sin(PI * p), 1.6) * 0.05
+		b[i] += (sin(TAU * 219.0 * t) + sin(TAU * 221.5 * t)
+			+ sin(TAU * 329.6 * t) * 0.6 + sin(TAU * 466.2 * t) * 0.3) * env
+
+	b.resize(int(len * SR))
+	_save("music", _loopify(b, 0.05))
+
+
+func _music_old_hunt() -> void:
+	# (Kept for reference — the brighter 95 BPM hunt loop from earlier builds.)
 	var spb := 60.0 / 95.0            # seconds per beat
 	var bar := spb * 4.0
 	var bars := 24

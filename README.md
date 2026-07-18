@@ -47,8 +47,9 @@ Press **F5** (or the ▶ button). You control the caveman:
 | **Mouse**    | Orbit camera              |
 | **Space**    | Jump                      |
 | **LMB**      | Parasite-fist combo (unlocked by the meteor) |
+| **LMB during recovery** | Buffer the next combo strike |
 | **Q** (hold) | Ceratops Shield — blocks frontal damage |
-| **E**        | Raptor Claws — shredding dash |
+| **E**        | Duonychus Claws — shredding dash |
 | **F**        | Tyrant Jaws — devouring bite (executes weakened prey) |
 | **RMB**      | Heavy two-hand slam (slow, 32 dmg, shockwave) |
 | **Ctrl**     | Dodge — quick burst with i-frames |
@@ -57,12 +58,17 @@ Press **F5** (or the ▶ button). You control the caveman:
 | **P**        | *(debug)* unlock all powers |
 | **Esc**      | Free / recapture the mouse |
 
+Jump inputs are buffered briefly and low ledges can be mantled automatically while
+moving into them. Heavy attacks, dodges, and dash mutations spend the stamina bar
+beneath health; basic movement and light attacks always remain available.
+
 **How it starts:** you wake at your camp, hair over your eyes, unarmed — the
 wildlife ignores you. Follow the objective to the fallen meteor. Touching the
 black-red shard **bonds the parasite to you**: your hair parts, black-red
 **parasite fists** grow over your hands, and every raptor in the valley starts
 hunting you. Powers unlock by killing the dinosaur that carries them — start
-with the **Alpha Raptor** guarding the crater (grants Raptor Claws).
+with **Duonychus**, a scythe-clawed therizinosaur guarding the crater (grants
+Duonychus Claws). At half health it enters a faster parasite-frenzy phase.
 
 ## Regenerating assets
 

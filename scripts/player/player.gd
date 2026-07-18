@@ -11,12 +11,22 @@ extends CharacterBody3D
 ##   Q hold Ceratops Shield · E Raptor Claws dash · F Tyrant Jaws chomp
 ##   Shift Pachy Charge · R Ankylo Tail sweep · P (debug) unlock all powers
 
+const MovementRules := preload("res://scripts/player/movement_math.gd")
+
 signal health_changed(current: float, max_value: float)
+signal stamina_changed(current: float, max_value: float)
 signal damaged
 signal kills_changed(count: int)
 signal died
 ## Emitted once, when the meteor parasite bonds with the caveman.
 signal parasite_bonded
+
+enum AttackPhase { IDLE, WINDUP, ACTIVE, RECOVERY }
+
+const STAMINA_COST_DODGE := 28.0
+const STAMINA_COST_HEAVY := 32.0
+const STAMINA_COST_CLAWS := 20.0
+const STAMINA_COST_CHARGE := 38.0
 
 @export_group("Movement")
 @export var move_speed := 6.0
@@ -24,6 +34,9 @@ signal parasite_bonded
 @export var gravity := 18.0
 @export var mouse_sensitivity := 0.0025
 @export var turn_speed := 12.0
+@export var max_stamina := 100.0
+@export var stamina_regen := 28.0
+@export var stamina_regen_delay := 0.7
 
 @export_group("Combat")
 @export var attack_damage := 18.0
@@ -50,12 +63,16 @@ const POWER_COOLDOWNS := {
 @onready var fist_node: Node3D = $Mesh/RightArmPivot/Hand
 
 var health: float
+var stamina: float
 var kills := 0
 ## False until the player touches the meteor shard. Pre-infection the caveman is
 ## unarmed (no attacks) and the wildlife leaves him alone.
 var infected := false
 var _pitch := -0.25
 var _attacking := false
+var _attack_phase := AttackPhase.IDLE
+var _queued_attack := false
+var _queued_heavy := false
 var _attack_index := 0
 var _invuln := 0.0
 var _trauma := 0.0
@@ -76,11 +93,23 @@ var _dodge_ready := 0.0
 var _was_on_floor := true
 var _fall_speed := 0.0
 var _club_prev := Vector3.ZERO
+## Which mutation the E key triggers — set from the weapon wheel (hold Tab).
+var equipped_mutation: int = PowerSystem.Power.CLAWS
+var _coyote := 0.0
+var _mantle_ready := 0.0
+var _mantling := false
+var _mantle_start := Vector3.ZERO
+var _mantle_target := Vector3.ZERO
+var _mantle_elapsed := 0.0
+var _mantle_duration := 0.34
+var _jump_buffer := 0.0
+var _stamina_regen_block := 0.0
 
 
 func _ready() -> void:
 	add_to_group("player")
 	health = max_health
+	stamina = max_stamina
 	_spawn_point = global_position
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -95,12 +124,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		elif event.button_index == MOUSE_BUTTON_LEFT:
-			_try_attack()
+			queue_attack()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			_try_attack(true)
+			queue_attack(true)
 		return
 	if event is InputEventKey and not event.echo:
 		match event.keycode:
+			KEY_SPACE:
+				if event.pressed:
+					_jump_buffer = 0.14
 			KEY_ESCAPE:
 				if event.pressed:
 					Input.mouse_mode = (
@@ -115,7 +147,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					stop_shield()
 			KEY_E:
 				if event.pressed:
-					activate_power(PowerSystem.Power.CLAWS)
+					activate_power(equipped_mutation)
 			KEY_F:
 				if event.pressed:
 					activate_power(PowerSystem.Power.JAWS)
@@ -137,6 +169,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_invuln -= delta
+	_jump_buffer = maxf(0.0, _jump_buffer - delta)
+	_stamina_regen_block -= delta
+	if _stamina_regen_block <= 0.0 and stamina < max_stamina:
+		var before := stamina
+		stamina = MovementRules.regenerate_resource(
+			stamina, max_stamina, stamina_regen, delta)
+		if stamina != before:
+			stamina_changed.emit(stamina, max_stamina)
+	if _mantling:
+		_mantle_step(delta)
+		return
 
 	# Committed dash (Claws / Charge) overrides normal movement entirely.
 	if _dashing:
@@ -145,9 +188,14 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor():
 		velocity.y -= gravity * delta
+		_coyote -= delta
+	else:
+		_coyote = 0.12  # coyote time — forgiving jumps off ledges
 
-	if Input.is_physical_key_pressed(KEY_SPACE) and is_on_floor():
+	if _jump_buffer > 0.0 and (is_on_floor() or _coyote > 0.0) and velocity.y <= 0.5:
 		velocity.y = jump_velocity
+		_coyote = 0.0
+		_jump_buffer = 0.0
 		Sfx.play3d("jump", global_position, -8.0)
 
 	var input_dir := Vector2.ZERO
@@ -163,9 +211,7 @@ func _physics_process(delta: float) -> void:
 
 	# Camera-relative movement direction.
 	var cam_basis := yaw_pivot.global_transform.basis
-	var direction := (cam_basis.z * input_dir.y) + (cam_basis.x * input_dir.x)
-	direction.y = 0.0
-	direction = direction.normalized()
+	var direction: Vector3 = MovementRules.camera_relative(input_dir, cam_basis)
 
 	# Nearly rooted while swinging; slowed while shielding.
 	var speed := move_speed
@@ -175,15 +221,21 @@ func _physics_process(delta: float) -> void:
 		speed *= 0.45
 
 	# Smooth acceleration toward the target velocity (no instant starts/stops).
+	# Grounded turns are snappy; airborne there's still real control (parkour feel).
+	var accel := 45.0 if is_on_floor() else 18.0
 	if direction.length() > 0.01:
-		velocity.x = move_toward(velocity.x, direction.x * speed, 45.0 * delta)
-		velocity.z = move_toward(velocity.z, direction.z * speed, 45.0 * delta)
+		velocity = MovementRules.horizontal_velocity(
+			velocity, direction * speed, accel, delta)
 		if not _attacking:
 			var target_yaw := atan2(direction.x, direction.z)
 			visual.rotation.y = lerp_angle(visual.rotation.y, target_yaw, turn_speed * delta)
+		# Auto-mantle: only starts when obstruction, top surface, and clearance agree.
+		_mantle_ready -= delta
+		if is_on_wall() and _mantle_ready <= 0.0 and velocity.y <= 1.0:
+			try_begin_mantle(direction)
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, 38.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, 38.0 * delta)
+		velocity = MovementRules.horizontal_velocity(velocity, Vector3.ZERO,
+			38.0 if is_on_floor() else 6.0, delta)
 
 	var hspeed := Vector2(velocity.x, velocity.z).length()
 	visual.move_amount = lerpf(visual.move_amount, hspeed / move_speed, 10.0 * delta)
@@ -219,6 +271,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	var speed_ratio := clampf(Vector2(velocity.x, velocity.z).length() / 16.0, 0.0, 1.0)
+	var target_fov := 70.0 + speed_ratio * 7.0 + (4.0 if _dashing else 0.0)
+	camera.fov = lerpf(camera.fov, target_fov, minf(1.0, delta * 8.0))
 	# Camera shake driven by trauma (decays over time, offset scales quadratically).
 	if _trauma > 0.0:
 		_trauma = maxf(0.0, _trauma - 2.2 * delta)
@@ -245,12 +300,36 @@ func infect() -> void:
 	parasite_bonded.emit()
 
 
+func queue_attack(heavy := false) -> bool:
+	if not infected or _dashing or _mantling:
+		return false
+	if heavy and not can_spend_stamina(STAMINA_COST_HEAVY):
+		return false
+	if _attacking:
+		if _queued_attack:
+			return false
+		_queued_attack = true
+		_queued_heavy = heavy
+		if _attack_phase == AttackPhase.IDLE:
+			_attack_phase = AttackPhase.RECOVERY
+		return true
+	_try_attack(heavy)
+	return true
+
+
+func attack_phase_name() -> String:
+	return AttackPhase.keys()[_attack_phase].to_lower()
+
+
 func _try_attack(heavy := false) -> void:
 	if not infected:
 		return  # unarmed until the parasite bonds
-	if _attacking or _dashing:
+	if _attacking or _dashing or _mantling:
+		return
+	if heavy and not spend_stamina(STAMINA_COST_HEAVY):
 		return
 	_attacking = true
+	_attack_phase = AttackPhase.WINDUP
 	# Claws make every swing faster — the parasite quickens the arm.
 	var has_claws := PowerSystem.has_power(PowerSystem.Power.CLAWS)
 	var windup: float
@@ -272,14 +351,23 @@ func _try_attack(heavy := false) -> void:
 	facing.y = 0.0
 	velocity += facing.normalized() * (3.2 if heavy else 2.2)
 	await get_tree().create_timer(windup).timeout
+	_attack_phase = AttackPhase.ACTIVE
 	_strike(heavy)
+	_attack_phase = AttackPhase.RECOVERY
 	await get_tree().create_timer(recovery).timeout
 	_attacking = false
+	_attack_phase = AttackPhase.IDLE
+	if _queued_attack:
+		var next_heavy := _queued_heavy
+		_queued_attack = false
+		_queued_heavy = false
+		queue_attack.call_deferred(next_heavy)
 
 
 ## The strike frame: damage everything hostile inside the hitbox.
 func _strike(heavy := false) -> void:
 	var damage := 32.0 if heavy else attack_damage
+	damage += Stats.levels.get("fists", 0) * 4.0  # blood-bought fist levels
 	if PowerSystem.has_power(PowerSystem.Power.CLAWS):
 		damage += 6.0
 	var hit := false
@@ -301,7 +389,9 @@ func _strike(heavy := false) -> void:
 
 ## Quick evasive burst (Ctrl) — brief i-frames, moves with input or backsteps.
 func dodge() -> void:
-	if _dashing or _attacking or _now() < _dodge_ready:
+	if _dashing or _attacking or _mantling or _now() < _dodge_ready:
+		return
+	if not spend_stamina(STAMINA_COST_DODGE):
 		return
 	_dodge_ready = _now() + 1.2
 	var input_dir := Vector2.ZERO
@@ -347,7 +437,16 @@ func activate_power(power: int) -> void:
 		return
 	if not has_cooldown_elapsed(power):
 		return
-	_power_ready[power] = _now() + float(POWER_COOLDOWNS.get(power, 0.0))
+	var stamina_cost := 0.0
+	if power == PowerSystem.Power.CLAWS:
+		stamina_cost = STAMINA_COST_CLAWS
+	elif power == PowerSystem.Power.CHARGE:
+		stamina_cost = STAMINA_COST_CHARGE
+	if stamina_cost > 0.0 and not spend_stamina(stamina_cost):
+		return
+	# Cooldowns shrink as the mutation is leveled with blood.
+	_power_ready[power] = _now() \
+		+ float(POWER_COOLDOWNS.get(power, 0.0)) * Stats.power_cooldown_mult(power)
 	match power:
 		PowerSystem.Power.CLAWS:
 			_begin_dash(power, 16.0, 0.28, Color(1.0, 0.55, 0.15))
@@ -391,11 +490,6 @@ func _begin_dash(power: int, speed: float, duration: float, _color: Color) -> vo
 	visual.rotation.y = yaw_pivot.rotation.y + PI
 	visual.move_amount = 1.0
 	Sfx.play3d("dash", global_position, -2.0)
-	# FOV kick for speed feel.
-	var t := create_tween()
-	t.tween_property(camera, "fov", 80.0, 0.12)
-	t.tween_interval(maxf(duration - 0.12, 0.0))
-	t.tween_property(camera, "fov", 70.0, 0.3)
 
 
 func _dash_step(delta: float) -> void:
@@ -421,11 +515,11 @@ func _dash_step(delta: float) -> void:
 			dir = dir.normalized()
 			if _dash_power == PowerSystem.Power.CHARGE:
 				# Ram: moderate damage, massive knockback (scaled dir = big fling).
-				body.take_damage(15.0, dir * 4.0)
+				body.take_damage(15.0 * Stats.power_damage_mult(_dash_power), dir * 4.0)
 				_trauma = maxf(_trauma, 0.7)
 			else:
 				# Claws: heavy shredding damage, extra blood.
-				body.take_damage(22.0, dir)
+				body.take_damage(22.0 * Stats.power_damage_mult(_dash_power), dir)
 				Gore.spray(body.global_position + Vector3.UP, dir, 26)
 			Sfx.play3d("hit", body.global_position)
 			Gore.hitstop()
@@ -467,7 +561,7 @@ func _jaws_chomp() -> void:
 		health = minf(max_health, health + 25.0)
 		Gore.hitstop(0.05, 0.14)
 	else:
-		target.take_damage(30.0, dir)
+		target.take_damage(30.0 * Stats.power_damage_mult(PowerSystem.Power.JAWS), dir)
 		health = minf(max_health, health + 8.0)
 		Gore.hitstop()
 	_trauma = maxf(_trauma, 0.6)
@@ -506,7 +600,8 @@ func _tail_sweep() -> void:
 			continue
 		var dir: Vector3 = enemy.global_position - global_position
 		dir.y = 0.0
-		enemy.take_damage(20.0, dir.normalized() * 2.0)
+		enemy.take_damage(20.0 * Stats.power_damage_mult(PowerSystem.Power.TAIL_SWEEP),
+			dir.normalized() * 2.0)
 		hit = true
 	for k in 10:  # radial shockwave streaks
 		var ang := TAU * k / 10.0
@@ -520,6 +615,68 @@ func _tail_sweep() -> void:
 
 func _now() -> float:
 	return Time.get_ticks_msec() / 1000.0
+
+
+func is_mantling() -> bool:
+	return _mantling
+
+
+func try_begin_mantle(direction: Vector3) -> bool:
+	if _mantling or _attacking or _dashing or direction.length_squared() < 0.1:
+		return false
+	var space := get_world_3d().direct_space_state
+	var exclude: Array[RID] = [get_rid()]
+	var chest_from := global_position + Vector3.UP * 1.0
+	var chest_query := PhysicsRayQueryParameters3D.create(
+		chest_from, chest_from + direction * 0.9, 1, exclude)
+	if space.intersect_ray(chest_query).is_empty():
+		return false
+	var head_from := global_position + Vector3.UP * 2.15
+	var head_query := PhysicsRayQueryParameters3D.create(
+		head_from, head_from + direction * 1.1, 1, exclude)
+	if not space.intersect_ray(head_query).is_empty():
+		return false
+	var top_from := head_from + direction * 1.0
+	var top_query := PhysicsRayQueryParameters3D.create(
+		top_from, top_from + Vector3.DOWN * 1.7, 1, exclude)
+	var top_hit := space.intersect_ray(top_query)
+	if top_hit.is_empty():
+		return false
+	var rise: float = top_hit.position.y - global_position.y
+	if rise < 0.35 or rise > 1.65:
+		return false
+	_mantling = true
+	_mantle_elapsed = 0.0
+	_mantle_start = global_position
+	_mantle_target = top_hit.position + direction * 0.45 + Vector3.UP * 0.08
+	velocity = Vector3.ZERO
+	_mantle_ready = 0.6
+	Gore.puff(global_position + direction * 0.5, 6)
+	Sfx.play3d("jump", global_position, -10.0, 0.85)
+	return true
+
+
+func _mantle_step(delta: float) -> void:
+	_mantle_elapsed += delta
+	var progress := minf(1.0, _mantle_elapsed / _mantle_duration)
+	global_position = MovementRules.mantle_position(
+		_mantle_start, _mantle_target, progress, 0.28)
+	if progress >= 1.0:
+		_mantling = false
+		velocity = Vector3.ZERO
+
+
+func can_spend_stamina(amount: float) -> bool:
+	return amount >= 0.0 and stamina >= amount
+
+
+func spend_stamina(amount: float) -> bool:
+	if not can_spend_stamina(amount):
+		return false
+	stamina -= amount
+	_stamina_regen_block = stamina_regen_delay
+	stamina_changed.emit(stamina, max_stamina)
+	return true
 
 
 # ------------------------------------------------------------------ damage & death
@@ -567,9 +724,19 @@ func _die() -> void:
 	health_changed.emit(health, max_health)
 
 
-## Called via call_group by dying enemies.
-func on_enemy_killed() -> void:
+## Called via call_group by dying enemies (species + blood bounty).
+func on_enemy_killed(species := "Raptor", blood_reward := 25) -> void:
 	kills += 1
+	Stats.add_kill(species, blood_reward)
 	health = minf(max_health, health + kill_heal)
 	kills_changed.emit(kills)
+	health_changed.emit(health, max_health)
+
+
+## Re-apply blood-bought character upgrades (called after menu purchases).
+func refresh_stats() -> void:
+	var new_max: float = 100.0 + float(Stats.levels.get("vitality", 0)) * 20.0
+	if new_max > max_health:
+		health += new_max - max_health  # vitality levels heal the difference
+	max_health = new_max
 	health_changed.emit(health, max_health)

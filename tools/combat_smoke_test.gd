@@ -48,8 +48,23 @@ func _ready() -> void:
 	raptor.take_damage(18.0, Vector3.FORWARD)
 	_check(not raptor.is_alive(), "raptor dies on third hit")
 
+	# --- Dismemberment: FORWARD dir = frontal hit → head torn off on death ---
+	_check(not raptor.neck.visible, "killing blow to the head severs it")
+
 	# --- Kill reward reached the player via call_group ---
 	_check(player.kills == 1, "kill was credited to the player")
+	_check(Stats.blood >= 25, "blood was harvested from the kill")
+	_check(int(Stats.kills.get("Raptor", 0)) == 1, "kill recorded per species")
+
+	# --- Blood upgrades ---
+	Stats.blood = 500
+	var old_max: float = player.max_health
+	_check(Stats.buy("vitality"), "vitality purchase succeeds with blood")
+	player.refresh_stats()
+	_check(player.max_health == old_max + 20.0, "vitality raises max health")
+	_check(Stats.power_damage_mult(PowerSystem.Power.CLAWS) == 1.0, "unleveled mutation x1")
+	Stats.buy("claws")
+	_check(Stats.power_damage_mult(PowerSystem.Power.CLAWS) == 1.25, "leveled mutation x1.25")
 
 	# --- Player damage / knockback ---
 	var hp_before: float = player.health

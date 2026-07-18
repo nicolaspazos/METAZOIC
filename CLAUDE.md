@@ -31,6 +31,10 @@ Concept and roadmap live in [GAME_DESIGN.md](GAME_DESIGN.md).
   `Mesh` (script `caveman_visual.gd`, class `CavemanVisual`) turns to face movement and is
   procedurally animated (walk cycle, club swings). `YawPivot → PitchPivot → Camera3D` is the
   mouse-orbit rig. `Mesh/AttackHitbox` (Area3D) is the club's damage volume.
+- **Movement rules** that do not require scene state live in
+  `scripts/player/movement_math.gd`. It owns camera-relative direction, horizontal
+  acceleration, resource clamping, and mantle-arc interpolation so those rules are
+  deterministic under headless tests.
 - **`scenes/enemies/raptor.tscn`** (`raptor.gd`) is the grunt enemy: state machine
   WANDER → CHASE → LUNGE → RECOVER → DEAD, procedural leg/tail/head animation.
 - **`Gore`** (autoload, `scripts/systems/gore.gd`) is all blood/impact FX, generated in
@@ -126,10 +130,13 @@ Godot can import and check the project headlessly (once the editor is installed 
 
 # Combat smoke test — asserts damage/death/kill-reward/PowerSystem behavior. Exit 0 = pass.
 & <path-to-godot.exe> --headless --path . res://tools/combat_smoke_test.tscn
+
+# Core gameplay test — movement math, stamina, attack buffering, audio, and boss phase.
+& <path-to-godot.exe> --headless --path . --quit-after 600 res://tools/core_gameplay_test.tscn
 ```
 
-Run all three after any gameplay change. Extend `tools/combat_smoke_test.gd` when adding
-mechanics — it's the only automated safety net.
+Run all four after any gameplay change. Extend `tools/core_gameplay_test.gd` for
+controller/resource rules and `tools/combat_smoke_test.gd` for full combat-loop behavior.
 
 ## Conventions recap
 

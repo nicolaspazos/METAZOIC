@@ -20,11 +20,20 @@ PowerSystem="*res://scripts/systems/power_system.gd"
 Gore="*res://scripts/systems/gore.gd"
 ; All sound: SFX pools, music, ambient loops (assets from tools/asset_gen/).
 Sfx="*res://scripts/systems/sfx.gd"
+; Blood currency, kill records, and mutation/character upgrade levels.
+Stats="*res://scripts/systems/stats.gd"
 
 [display]
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+; Launch fullscreen.
+window/size/mode=3
+
+[gui]
+
+; Dark-fantasy serif font for all UI (SystemFont — no bundled binaries needed).
+theme/custom="res://assets/ui/theme.tres"
 
 [rendering]
 

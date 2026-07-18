@@ -17,15 +17,17 @@ enum Power {
 	CLAWS,       ## Velociraptor       — fast slashing claws / lunge
 	CHARGE,      ## Pachycephalosaurus — a headbutt charge
 	TAIL_SWEEP,  ## Ankylosaurus       — a heavy tail-club sweep
+	SPEED,       ## Alpha Raptor       — enhanced legs and sustained sprint
 }
 
 ## Human-facing metadata for each power. Extend this as new bosses are designed.
 const POWER_INFO := {
 	Power.SHIELD:     {"name": "Ceratops Shield", "source": "Triceratops"},
 	Power.JAWS:       {"name": "Tyrant Jaws",     "source": "Tyrannosaurus"},
-	Power.CLAWS:      {"name": "Raptor Claws",    "source": "Velociraptor"},
+	Power.CLAWS:      {"name": "Duonychus Claws", "source": "Duonychus tsogtbaatari"},
 	Power.CHARGE:     {"name": "Pachy Charge",    "source": "Pachycephalosaurus"},
 	Power.TAIL_SWEEP: {"name": "Ankylo Tail",     "source": "Ankylosaurus"},
+	Power.SPEED:      {"name": "Raptor Legs",     "source": "Alpha Raptor"},
 }
 
 ## Set of powers the player currently owns. Keys are Power values; values are always true.

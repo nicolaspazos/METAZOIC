@@ -67,9 +67,10 @@ func _compute_heights() -> void:
 			var r := Vector2(x, z).length()
 			h *= lerpf(0.3, 1.0, smoothstep(30.0, 55.0, r))
 
-			# Mountain ring past the walls — natural-looking bounds.
+			# Mountain ring past the walls — jagged peaks, not a gentle rise.
 			if r > 48.0:
-				h += (r - 48.0) * 0.45
+				h += (r - 48.0) * 0.85
+				h += maxf(0.0, r - 52.0) * (_noise.get_noise_2d(x * 2.3, z * 2.3) * 0.5 + 0.35) * 0.9
 
 			# The meteor crater: bowl blended to the noise, plus a raised rim.
 			var d := Vector2(x, z).distance_to(CRATER_POS)
@@ -118,6 +119,7 @@ func _build_mesh_and_collision() -> void:
 	mat.shader = load("res://assets/shaders/psx_terrain.gdshader")
 	mat.set_shader_parameter("grass_tex", load("res://assets/textures/grass.png"))
 	mat.set_shader_parameter("dirt_tex", load("res://assets/textures/dirt.png"))
+	mat.set_shader_parameter("rock_tex", load("res://assets/textures/rock.png"))
 
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh

@@ -20,7 +20,7 @@ func _ready() -> void:
 		quad.size = Vector2(rng.randf_range(30.0, 52.0), rng.randf_range(9.0, 16.0))
 		var mat := StandardMaterial3D.new()
 		mat.albedo_texture = tex
-		mat.albedo_color = Color(1.0, 0.82, 0.75, 0.85)
+		mat.albedo_color = Color(0.45, 0.3, 0.32, 0.8)  # bruised storm clouds
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
@@ -47,7 +47,7 @@ func _build_sun() -> void:
 	quad.size = Vector2(34.0, 34.0)
 	var mat := StandardMaterial3D.new()
 	mat.albedo_texture = load("res://assets/textures/sun.png")
-	mat.albedo_color = Color(1.0, 0.85, 0.6, 1.0)
+	mat.albedo_color = Color(0.85, 0.3, 0.18, 1.0)  # a dying red sun
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

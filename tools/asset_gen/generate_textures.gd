@@ -84,11 +84,12 @@ func _grass() -> void:
 	var patch := _noise(11, 0.025, 2)
 	var speck := _noise(12, 0.35, 1)
 	_paint("grass", func(x, y):
-		var c := Color(0.23, 0.34, 0.13).lerp(Color(0.37, 0.48, 0.18), _t01(base, x, y))
+		# Grim moor grass — desaturated olive greys.
+		var c := Color(0.14, 0.18, 0.1).lerp(Color(0.25, 0.28, 0.14), _t01(base, x, y))
 		if _tiled(patch, x, y) > 0.25:
-			c *= 0.8
+			c *= 0.75
 		if _tiled(speck, x, y) > 0.62:
-			c *= 1.2
+			c *= 1.25
 		return c)
 
 
@@ -96,7 +97,7 @@ func _dirt() -> void:
 	var base := _noise(20, 0.06, 3)
 	var pebble := _noise(21, 0.3, 1)
 	_paint("dirt", func(x, y):
-		var c := Color(0.3, 0.21, 0.12).lerp(Color(0.46, 0.34, 0.2), _t01(base, x, y))
+		var c := Color(0.2, 0.15, 0.1).lerp(Color(0.33, 0.25, 0.16), _t01(base, x, y))
 		if _tiled(pebble, x, y) > 0.55:
 			c *= 1.22
 		return c)
@@ -118,7 +119,7 @@ func _bark() -> void:
 	_paint("bark", func(x, y):
 		# Vertical bands (tile in x for cylinder wrap), wobbled by noise.
 		var band := 0.5 + 0.5 * sin(TAU * (float(x) / S * 6.0 + _tiled(wob, x, y) * 0.7))
-		var c := Color(0.24, 0.15, 0.08).lerp(Color(0.42, 0.28, 0.15), band)
+		var c := Color(0.13, 0.09, 0.06).lerp(Color(0.28, 0.2, 0.12), band)
 		c *= 0.9 + 0.2 * _t01(grain, x, y)
 		return c)
 
@@ -127,9 +128,10 @@ func _leaves() -> void:
 	var clump := _noise(50, 0.07, 3)
 	var hole := _noise(51, 0.18, 2)
 	_paint("leaves", func(x, y):
-		var c := Color(0.09, 0.24, 0.1).lerp(Color(0.24, 0.42, 0.14), _t01(clump, x, y))
+		# Murky, almost-black foliage.
+		var c := Color(0.06, 0.12, 0.07).lerp(Color(0.15, 0.24, 0.1), _t01(clump, x, y))
 		if _tiled(hole, x, y) > 0.45:
-			c *= 0.55
+			c *= 0.5
 		return c)
 
 
@@ -185,7 +187,7 @@ func _scales() -> void:
 	var bump := _noise(80, 0.22, 2)
 	var stripe := _noise(81, 0.03, 2)
 	_paint("scales", func(x, y):
-		var c := Color(0.2, 0.4, 0.15) * (0.85 + 0.35 * _t01(bump, x, y))
+		var c := Color(0.14, 0.24, 0.11) * (0.85 + 0.35 * _t01(bump, x, y))
 		# Broken vertical striping — classic movie-raptor markings.
 		var s := 0.5 + 0.5 * sin(TAU * (float(x) / S * 3.0)) + _tiled(stripe, x, y) * 0.9
 		if s > 1.05:
@@ -233,7 +235,7 @@ func _water() -> void:
 	var wave := _noise(100, 0.06, 3)
 	var glint := _noise(101, 0.2, 1)
 	_paint("water", func(x, y):
-		var c := Color(0.1, 0.28, 0.3).lerp(Color(0.16, 0.4, 0.42), _t01(wave, x, y))
+		var c := Color(0.05, 0.12, 0.14).lerp(Color(0.09, 0.2, 0.22), _t01(wave, x, y))
 		# Bright caustic ripple lines.
 		var v := sin(TAU * (float(y) / S * 4.0 + _tiled(wave, x, y) * 1.2))
 		if v > 0.82:

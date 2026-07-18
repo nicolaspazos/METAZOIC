@@ -8,6 +8,8 @@ extends CharacterBody3D
 
 enum State { WANDER, CHASE, LUNGE, RECOVER, DEAD }
 
+@export var species_name := "Raptor"
+@export var blood_reward := 25
 @export var max_health := 40.0
 @export var move_speed := 4.6
 @export var wander_speed := 1.5
@@ -42,6 +44,9 @@ var _mesh_instances: Array = []
 var _jaw_target := 0.05
 ## Which way this raptor circles its prey (+1/-1), re-rolled after each bite.
 var _strafe_side := 1.0
+## Where the last hit landed ("head"/"tail"/"leg_l"/"leg_r") — drives dismemberment.
+var _last_hit_region := "body"
+var _tail_severed := false
 
 
 func _ready() -> void:
@@ -168,6 +173,21 @@ func take_damage(amount: float, hit_dir: Vector3 = Vector3.ZERO) -> void:
 	if state == State.DEAD:
 		return
 	health -= amount
+	# Locate the hit: the attacker stands along -hit_dir in the raptor's local
+	# space (front = +Z). Head-on hits strike the head, rear hits the tail,
+	# flanking hits the legs — this decides what gets severed.
+	if hit_dir != Vector3.ZERO:
+		var local := mesh.global_transform.basis.inverse() * -hit_dir
+		if local.z > 0.35:
+			_last_hit_region = "head"
+		elif local.z < -0.35:
+			_last_hit_region = "tail"
+		else:
+			_last_hit_region = "leg_l" if local.x > 0.0 else "leg_r"
+	# A hard tail hit on a wounded raptor takes the tail clean off mid-fight.
+	if not _tail_severed and _last_hit_region == "tail" \
+			and health > 0.0 and health < max_health * 0.5:
+		_sever("tail")
 	Gore.spray(global_position + Vector3.UP * 0.9, (hit_dir + Vector3.UP * 0.4).normalized(), 20)
 	Sfx.play3d("raptor_hurt", global_position, -2.0)
 	velocity += hit_dir * 6.0 + Vector3.UP * 2.5
@@ -194,16 +214,51 @@ func _set_flash(a: float) -> void:
 			mi.set_instance_shader_parameter("flash", Color(1.0, 0.25, 0.15, a))
 
 
+## Tear off the struck body part — gouts of blood, chunks, and a fresh pool.
+func _sever(region: String) -> void:
+	var stump := global_position + Vector3.UP
+	match region:
+		"head":
+			if not neck.visible:
+				return
+			neck.visible = false
+			stump = neck.global_position + Vector3.UP * 0.3
+		"tail":
+			if not tail.visible:
+				return
+			tail.visible = false
+			_tail_severed = true
+			stump = tail.global_position
+		"leg_l":
+			if not l_leg.visible:
+				return
+			l_leg.visible = false
+			stump = l_leg.global_position
+		"leg_r":
+			if not r_leg.visible:
+				return
+			r_leg.visible = false
+			stump = r_leg.global_position
+		_:
+			return
+	Gore.burst(stump, 36)
+	Gore.gibs(stump, 5)
+	Gore.pool(stump)
+	Sfx.play3d("chomp", stump, -2.0, 0.8)
+
+
 func _die() -> void:
 	state = State.DEAD
 	Sfx.play3d("raptor_die", global_position, 2.0)
+	# The killing blow rips off whatever it landed on.
+	_sever(_last_hit_region)
 	Gore.burst(global_position + Vector3.UP * 0.8)
 	Gore.pool(global_position)
 	Gore.gibs(global_position + Vector3.UP * 0.7, 4)
 	# Corpses only collide with the world, so the player walks over them freely.
 	set_deferred("collision_layer", 0)
 	set_deferred("collision_mask", 1)
-	get_tree().call_group("player", "on_enemy_killed")
+	get_tree().call_group("player", "on_enemy_killed", species_name, blood_reward)
 	# Topple with a bounce, linger as a corpse, then sink into the ground.
 	var t := create_tween()
 	t.tween_property(mesh, "rotation:z", PI * 0.55, 0.45) \

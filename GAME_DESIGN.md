@@ -38,7 +38,8 @@ The mapping lives in code in [`scripts/systems/power_system.gd`](scripts/systems
 |---------------------|-----------------|---------------------------------------------|
 | Triceratops         | Ceratops Shield | Raise a frontal shield / barrier            |
 | Tyrannosaurus       | Tyrant Jaws     | Powerful bite — high-damage close attack    |
-| Velociraptor        | Raptor Claws    | Fast slashing combo / lunge                 |
+| Duonychus (therizinosaur) | Duonychus Claws | Fast slashing combo / lunge              |
+| Alpha Raptor        | Raptor Legs     | Enhanced legs / sustained super-speed       |
 | Pachycephalosaurus  | Pachy Charge    | Headbutt charge — dash + knockback          |
 | Ankylosaurus        | Ankylo Tail     | Heavy tail-club sweep — AoE                  |
 
@@ -56,9 +57,12 @@ extends [`scripts/enemies/boss_dinosaur.gd`](scripts/enemies/boss_dinosaur.gd).
 - [x] PS2 presentation pass — 40% render scale, color-quantize + Bayer-dither post shader, dusk fog
 - [x] Starting area — meteor crash site (glowing shards), rocks, trees, walled arena
 - [x] Headless combat smoke test (`tools/combat_smoke_test.tscn`)
-- [x] All 5 powers playable — Shield (Q hold), Claws dash (E), Jaws bite (F),
+- [x] Five combat powers playable — Shield (Q hold), Claws dash (E), Jaws bite (F),
       Charge (Shift), Tail sweep (R) — with cooldowns and HUD power bar
-- [x] First mini-boss: **Alpha Raptor** at the crash site → grants Raptor Claws
+- [x] First boss: **Duonychus**, a scythe-clawed therizinosaur → grants
+      Duonychus Claws and enrages below half health
+- [x] Controller-feel pass — jump buffering, coyote time, validated mantle arcs,
+      speed-sensitive camera FOV, stamina, and buffered light-attack follow-ups
 - [x] True PSX rendering — vertex-jitter + affine-warp shaders, procedural
       128px textures, faceted procedural terrain with crater & mountain ring
 - [x] Audio — 14 synthesized SFX, wind + crash-site hum loops, 40s tribal
@@ -69,7 +73,8 @@ extends [`scripts/enemies/boss_dinosaur.gd`](scripts/enemies/boss_dinosaur.gd).
       pack-circling raptor AI with staggers and hop-backs, CRT scanlines +
       vignette, 61s two-section music
 - [ ] First major boss: Triceratops (shield power, earned in-game)
-- [ ] Remaining boss fights: Tyrannosaurus, Pachycephalosaurus, Ankylosaurus
+- [ ] Remaining boss fights: Alpha Raptor (speed legs), Tyrannosaurus,
+      Pachycephalosaurus, Ankylosaurus
 - [ ] The meteorite intro / opening cinematic
 - [ ] Bigger world (regions beyond the starting arena)
 - [ ] Save system (persist absorbed powers between runs)

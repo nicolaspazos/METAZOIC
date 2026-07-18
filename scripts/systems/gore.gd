@@ -65,7 +65,8 @@ func puff(pos: Vector3, amount: int = 10) -> void:
 		Vector3(0, 1.0, 0), 0.16)
 
 
-## A dark pool that grows on the ground and lingers, then fades.
+## A dark irregular blood splatter that grows on the ground and lingers, then
+## fades. Never a perfect circle — a jagged main splat plus satellite droplets.
 ## Raycasts down to sit on the terrain wherever the kill happened.
 func pool(pos: Vector3) -> void:
 	var ground_y := pos.y
@@ -77,23 +78,50 @@ func pool(pos: Vector3) -> void:
 		var hit := space.intersect_ray(query)
 		if hit:
 			ground_y = hit.position.y
-	var disc := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.height = 0.04
-	cyl.top_radius = 1.0
-	cyl.bottom_radius = 1.0
-	cyl.material = _pool_mat
-	disc.mesh = cyl
-	_attach(disc, Vector3(pos.x, ground_y + 0.05, pos.z))
-	if not disc.is_inside_tree():
+	var base := Vector3(pos.x, ground_y + 0.045, pos.z)
+	_splat(base, 1.0)
+	for i in randi_range(2, 4):
+		var off := Vector3(randf_range(-1.1, 1.1), 0.0, randf_range(-1.1, 1.1))
+		_splat(base + off + Vector3.UP * 0.005, randf_range(0.2, 0.45))
+
+
+## One jagged splat blob: a triangle fan with randomized rim radii.
+func _splat(pos: Vector3, size: float) -> void:
+	var n := 12
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var rim: Array[Vector3] = []
+	for i in n:
+		var ang := -TAU * float(i) / n  # clockwise from above = front face
+		var r := size * randf_range(0.45, 1.0)
+		rim.append(Vector3(cos(ang) * r, 0.0, sin(ang) * r))
+	rim.append(rim[0])  # close the loop with the SAME point (no seam)
+	for i in n:
+		verts.append(Vector3.ZERO)
+		verts.append(rim[i])
+		verts.append(rim[i + 1])
+		for k in 3:
+			normals.append(Vector3.UP)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = _pool_mat
+	_attach(mi, pos)
+	if not mi.is_inside_tree():
 		return
-	disc.scale = Vector3(0.1, 1.0, 0.1)
-	var t := disc.create_tween()
-	t.tween_property(disc, "scale", Vector3(1.1, 1.0, 1.1), 1.2) \
+	mi.rotation.y = randf() * TAU
+	mi.scale = Vector3(0.1, 1.0, 0.1)
+	var t := mi.create_tween()
+	t.tween_property(mi, "scale", Vector3.ONE, 1.1) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	t.tween_interval(25.0)
-	t.tween_property(disc, "transparency", 1.0, 4.0)
-	t.tween_callback(disc.queue_free)
+	t.tween_property(mi, "transparency", 1.0, 4.0)
+	t.tween_callback(mi.queue_free)
 
 
 ## Physical chunks that fly out, bounce on the ground, and despawn later.
