@@ -47,4 +47,8 @@ func _spawn_at(marker: Node3D) -> void:
 	if terrain:
 		y = terrain.height_at(pos.x, pos.z) + 0.8
 	raptor.global_position = Vector3(pos.x, y, pos.z)
+	# Slight size variance so the pack doesn't look cloned.
+	var visual := raptor.get_node_or_null("Mesh")
+	if visual:
+		visual.scale = Vector3.ONE * randf_range(0.88, 1.15)
 	_spawned.append(raptor)

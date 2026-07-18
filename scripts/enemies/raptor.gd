@@ -29,6 +29,7 @@ var _anim_t := 0.0
 
 @onready var mesh: Node3D = $Mesh
 @onready var neck: Node3D = $Mesh/NeckPivot
+@onready var jaw: Node3D = $Mesh/NeckPivot/HeadPivot/JawPivot
 @onready var tail: Node3D = $Mesh/TailPivot
 @onready var tail2: Node3D = $Mesh/TailPivot/Tail2Pivot
 @onready var tail3: Node3D = $Mesh/TailPivot/Tail2Pivot/Tail3Pivot
@@ -37,6 +38,10 @@ var _anim_t := 0.0
 
 ## Cached for the instance-uniform hit flash (psx_lit's `flash` parameter).
 var _mesh_instances: Array = []
+## How wide the jaw hangs open right now (lerped toward _jaw_target in _process).
+var _jaw_target := 0.05
+## Which way this raptor circles its prey (+1/-1), re-rolled after each bite.
+var _strafe_side := 1.0
 
 
 func _ready() -> void:
@@ -44,6 +49,7 @@ func _ready() -> void:
 	health = max_health
 	_home = global_position
 	_mesh_instances = mesh.find_children("*", "MeshInstance3D")
+	_strafe_side = 1.0 if randf() < 0.5 else -1.0
 
 
 func is_alive() -> bool:
@@ -89,14 +95,21 @@ func _physics_process(delta: float) -> void:
 			if dist > aggro_range * 1.8:
 				state = State.WANDER
 			elif dist < attack_range and _bite_cooldown <= 0.0:
-				# Commit to a lunge: leap at the player.
+				# Commit to a lunge: leap at the player, jaws wide.
 				state = State.LUNGE
 				_state_timer = 0.35
 				_has_bitten = false
+				_jaw_target = 0.7
 				var dir := to_player.normalized()
 				velocity.x = dir.x * lunge_speed
 				velocity.z = dir.z * lunge_speed
 				velocity.y = 2.5
+			elif dist < 6.0 and _bite_cooldown > 0.0:
+				# Circle the prey while the bite recharges — pack hunter behavior.
+				var fwd := to_player.normalized()
+				var tangent := Vector3(-fwd.z, 0.0, fwd.x) * _strafe_side
+				var desired := (tangent * 0.85 + fwd * 0.3).normalized() * move_speed * 0.6
+				_move_horizontal(desired, delta)
 			else:
 				_move_horizontal(to_player.normalized() * move_speed, delta)
 		State.LUNGE:
@@ -111,16 +124,24 @@ func _physics_process(delta: float) -> void:
 				state = State.RECOVER
 				_state_timer = 0.55
 				_bite_cooldown = 1.4
+				_jaw_target = 0.05
+				_strafe_side = 1.0 if randf() < 0.5 else -1.0
+				# Hop back out of club range after committing to the bite.
+				if player:
+					var back := -to_player.normalized()
+					velocity = back * 5.0 + Vector3.UP * 2.0
 		State.RECOVER:
 			_state_timer -= delta
 			_move_horizontal(Vector3.ZERO, delta)
 			if _state_timer <= 0.0:
 				state = State.CHASE
 
-	# Face the direction of travel.
-	var hvel := Vector3(velocity.x, 0, velocity.z)
-	if hvel.length() > 0.5:
-		mesh.rotation.y = lerp_angle(mesh.rotation.y, atan2(hvel.x, hvel.z), 10.0 * delta)
+	# Face travel direction — but lock eyes on the player when close (menace!).
+	var face_vec := Vector3(velocity.x, 0, velocity.z)
+	if player and dist < 7.0 and state != State.WANDER:
+		face_vec = to_player
+	if face_vec.length() > 0.5:
+		mesh.rotation.y = lerp_angle(mesh.rotation.y, atan2(face_vec.x, face_vec.z), 10.0 * delta)
 
 	move_and_slide()
 
@@ -138,6 +159,8 @@ func _process(delta: float) -> void:
 	tail2.rotation.y = sin(_anim_t * 0.6 - 0.7) * 0.35
 	tail3.rotation.y = sin(_anim_t * 0.6 - 1.4) * 0.4
 	neck.rotation.x = sin(_anim_t * 2.0) * 0.06 * run_ratio
+	# Jaw eases toward its target (wide during lunges, chattering at rest).
+	jaw.rotation.x = lerpf(jaw.rotation.x, _jaw_target, 12.0 * delta)
 
 
 ## Called by the player's attacks. `hit_dir` points from the attacker toward this raptor.
@@ -157,8 +180,11 @@ func take_damage(amount: float, hit_dir: Vector3 = Vector3.ZERO) -> void:
 	ft.tween_method(_set_flash, 0.85, 0.0, 0.22)
 	if health <= 0.0:
 		_die()
-	elif state == State.WANDER:
-		state = State.CHASE
+	else:
+		# Getting clubbed staggers the raptor — interrupts even a lunge.
+		state = State.RECOVER
+		_state_timer = maxf(_state_timer, 0.35)
+		_jaw_target = 0.05
 
 
 ## Set the red hit-flash amount on every mesh part (psx_lit instance uniform).

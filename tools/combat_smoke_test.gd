@@ -82,6 +82,14 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	_check(r2.health == hp_after_sweep, "cooldown prevents immediate reuse")
 
+	# --- Dodge grants i-frames and respects its own cooldown ---
+	player._invuln = 0.0
+	player.dodge()
+	_check(player._invuln > 0.0, "dodge grants i-frames")
+	var dodge_ready_after: float = player._dodge_ready
+	player.dodge()
+	_check(player._dodge_ready == dodge_ready_after, "dodge cooldown blocks spam")
+
 	# Let gore particles, pools, gibs, and death tweens tick a while.
 	await get_tree().create_timer(1.5).timeout
 

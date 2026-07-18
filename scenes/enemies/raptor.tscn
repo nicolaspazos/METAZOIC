@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://craptormetaz0001"]
+[gd_scene load_steps=31 format=3 uid="uid://craptormetaz0001"]
 
 [ext_resource type="Script" path="res://scripts/enemies/raptor.gd" id="1"]
 [ext_resource type="Shader" path="res://assets/shaders/psx_lit.gdshader" id="2"]
@@ -44,52 +44,64 @@ emission = Color(1, 0.75, 0.1, 1)
 emission_energy_multiplier = 1.5
 
 [sub_resource type="BoxMesh" id="mesh_hips"]
-size = Vector3(0.42, 0.48, 0.6)
+size = Vector3(0.4, 0.44, 0.55)
 
 [sub_resource type="BoxMesh" id="mesh_chest"]
-size = Vector3(0.36, 0.4, 0.5)
+size = Vector3(0.34, 0.38, 0.45)
 
-[sub_resource type="BoxMesh" id="mesh_neck"]
-size = Vector3(0.18, 0.32, 0.2)
+[sub_resource type="BoxMesh" id="mesh_spike"]
+size = Vector3(0.07, 0.07, 0.18)
+
+[sub_resource type="BoxMesh" id="mesh_neck_low"]
+size = Vector3(0.17, 0.26, 0.2)
+
+[sub_resource type="BoxMesh" id="mesh_neck_up"]
+size = Vector3(0.15, 0.22, 0.17)
 
 [sub_resource type="BoxMesh" id="mesh_head"]
-size = Vector3(0.22, 0.22, 0.3)
+size = Vector3(0.2, 0.2, 0.28)
 
 [sub_resource type="BoxMesh" id="mesh_snout"]
-size = Vector3(0.16, 0.13, 0.32)
+size = Vector3(0.15, 0.12, 0.3)
 
 [sub_resource type="BoxMesh" id="mesh_jaw"]
-size = Vector3(0.14, 0.07, 0.28)
+size = Vector3(0.13, 0.06, 0.3)
 
-[sub_resource type="BoxMesh" id="mesh_teeth"]
-size = Vector3(0.15, 0.03, 0.24)
+[sub_resource type="BoxMesh" id="mesh_teeth_u"]
+size = Vector3(0.14, 0.03, 0.22)
+
+[sub_resource type="BoxMesh" id="mesh_teeth_l"]
+size = Vector3(0.12, 0.025, 0.2)
 
 [sub_resource type="BoxMesh" id="mesh_eye"]
-size = Vector3(0.06, 0.06, 0.06)
+size = Vector3(0.05, 0.05, 0.05)
 
 [sub_resource type="BoxMesh" id="mesh_tail1"]
-size = Vector3(0.2, 0.24, 0.5)
+size = Vector3(0.18, 0.2, 0.5)
 
 [sub_resource type="BoxMesh" id="mesh_tail2"]
-size = Vector3(0.14, 0.17, 0.5)
+size = Vector3(0.12, 0.14, 0.5)
 
 [sub_resource type="BoxMesh" id="mesh_tail3"]
-size = Vector3(0.09, 0.11, 0.5)
+size = Vector3(0.07, 0.09, 0.5)
 
 [sub_resource type="BoxMesh" id="mesh_thigh"]
-size = Vector3(0.16, 0.45, 0.28)
+size = Vector3(0.15, 0.4, 0.26)
 
 [sub_resource type="BoxMesh" id="mesh_shin"]
-size = Vector3(0.11, 0.4, 0.14)
+size = Vector3(0.1, 0.36, 0.13)
 
 [sub_resource type="BoxMesh" id="mesh_foot"]
-size = Vector3(0.12, 0.09, 0.28)
+size = Vector3(0.11, 0.08, 0.24)
 
 [sub_resource type="BoxMesh" id="mesh_claw"]
-size = Vector3(0.05, 0.12, 0.1)
+size = Vector3(0.04, 0.1, 0.09)
 
 [sub_resource type="BoxMesh" id="mesh_arm"]
-size = Vector3(0.07, 0.3, 0.07)
+size = Vector3(0.06, 0.24, 0.06)
+
+[sub_resource type="BoxMesh" id="mesh_armclaw"]
+size = Vector3(0.05, 0.1, 0.05)
 
 [node name="Raptor" type="CharacterBody3D"]
 collision_layer = 4
@@ -103,55 +115,86 @@ shape = SubResource("shape_body")
 [node name="Mesh" type="Node3D" parent="."]
 
 [node name="Hips" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.15)
+transform = Transform3D(1, 0, 0, 0, 0.995, -0.0998, 0, 0.0998, 0.995, 0, 0.92, -0.18)
 mesh = SubResource("mesh_hips")
 surface_material_override/0 = SubResource("mat_scales")
 
 [node name="Chest" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 0.9888, 0.1494, 0, -0.1494, 0.9888, 0, 1, 0.28)
+transform = Transform3D(1, 0, 0, 0, 0.9839, 0.1789, 0, -0.1789, 0.9839, 0, 1.02, 0.25)
 mesh = SubResource("mesh_chest")
 surface_material_override/0 = SubResource("mat_belly")
 
-[node name="NeckPivot" type="Node3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0.52)
+[node name="Spike1" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(0.7071, -0.7071, 0, 0.7071, 0.7071, 0, 0, 0, 1, 0, 1.22, 0)
+mesh = SubResource("mesh_spike")
+surface_material_override/0 = SubResource("mat_dark")
 
-[node name="Neck" type="MeshInstance3D" parent="Mesh/NeckPivot"]
-transform = Transform3D(1, 0, 0, 0, 0.9394, 0.3429, 0, -0.3429, 0.9394, 0, 0.12, 0.06)
-mesh = SubResource("mesh_neck")
+[node name="Spike2" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(0.7071, -0.7071, 0, 0.7071, 0.7071, 0, 0, 0, 1, 0, 1.18, -0.28)
+mesh = SubResource("mesh_spike")
+surface_material_override/0 = SubResource("mat_dark")
+
+[node name="Spike3" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(0.7071, -0.7071, 0, 0.7071, 0.7071, 0, 0, 0, 1, 0, 1.12, -0.52)
+mesh = SubResource("mesh_spike")
+surface_material_override/0 = SubResource("mat_dark")
+
+[node name="NeckPivot" type="Node3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.14, 0.48)
+
+[node name="NeckLow" type="MeshInstance3D" parent="Mesh/NeckPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.8776, 0.4794, 0, -0.4794, 0.8776, 0, 0.08, 0.03)
+mesh = SubResource("mesh_neck_low")
 surface_material_override/0 = SubResource("mat_scales")
 
-[node name="Head" type="MeshInstance3D" parent="Mesh/NeckPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0.16)
+[node name="NeckUp" type="MeshInstance3D" parent="Mesh/NeckPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9888, 0.1494, 0, -0.1494, 0.9888, 0, 0.26, 0.1)
+mesh = SubResource("mesh_neck_up")
+surface_material_override/0 = SubResource("mat_scales")
+
+[node name="HeadPivot" type="Node3D" parent="Mesh/NeckPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0.14)
+
+[node name="Head" type="MeshInstance3D" parent="Mesh/NeckPivot/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.06)
 mesh = SubResource("mesh_head")
 surface_material_override/0 = SubResource("mat_scales")
 
-[node name="Snout" type="MeshInstance3D" parent="Mesh/NeckPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0.42)
+[node name="Snout" type="MeshInstance3D" parent="Mesh/NeckPivot/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.28)
 mesh = SubResource("mesh_snout")
 surface_material_override/0 = SubResource("mat_dark")
 
-[node name="JawLower" type="MeshInstance3D" parent="Mesh/NeckPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0.38)
+[node name="TeethU" type="MeshInstance3D" parent="Mesh/NeckPivot/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.06, 0.28)
+mesh = SubResource("mesh_teeth_u")
+surface_material_override/0 = SubResource("mat_teeth")
+
+[node name="EyeLeft" type="MeshInstance3D" parent="Mesh/NeckPivot/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.08, 0.1)
+mesh = SubResource("mesh_eye")
+surface_material_override/0 = SubResource("mat_eye")
+
+[node name="EyeRight" type="MeshInstance3D" parent="Mesh/NeckPivot/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 0.08, 0.1)
+mesh = SubResource("mesh_eye")
+surface_material_override/0 = SubResource("mat_eye")
+
+[node name="JawPivot" type="Node3D" parent="Mesh/NeckPivot/HeadPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.07, 0.08)
+
+[node name="Jaw" type="MeshInstance3D" parent="Mesh/NeckPivot/HeadPivot/JawPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0.18)
 mesh = SubResource("mesh_jaw")
 surface_material_override/0 = SubResource("mat_dark")
 
-[node name="Teeth" type="MeshInstance3D" parent="Mesh/NeckPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.225, 0.4)
-mesh = SubResource("mesh_teeth")
+[node name="TeethL" type="MeshInstance3D" parent="Mesh/NeckPivot/HeadPivot/JawPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.18)
+mesh = SubResource("mesh_teeth_l")
 surface_material_override/0 = SubResource("mat_teeth")
 
-[node name="EyeLeft" type="MeshInstance3D" parent="Mesh/NeckPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0.36, 0.22)
-mesh = SubResource("mesh_eye")
-surface_material_override/0 = SubResource("mat_eye")
-
-[node name="EyeRight" type="MeshInstance3D" parent="Mesh/NeckPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0.36, 0.22)
-mesh = SubResource("mesh_eye")
-surface_material_override/0 = SubResource("mat_eye")
-
 [node name="TailPivot" type="Node3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -0.42)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -0.45)
 
 [node name="Tail1" type="MeshInstance3D" parent="Mesh/TailPivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.25)
@@ -159,7 +202,7 @@ mesh = SubResource("mesh_tail1")
 surface_material_override/0 = SubResource("mat_scales")
 
 [node name="Tail2Pivot" type="Node3D" parent="Mesh/TailPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.5)
 
 [node name="Tail2" type="MeshInstance3D" parent="Mesh/TailPivot/Tail2Pivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.25)
@@ -167,7 +210,7 @@ mesh = SubResource("mesh_tail2")
 surface_material_override/0 = SubResource("mat_scales")
 
 [node name="Tail3Pivot" type="Node3D" parent="Mesh/TailPivot/Tail2Pivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.5)
 
 [node name="Tail3" type="MeshInstance3D" parent="Mesh/TailPivot/Tail2Pivot/Tail3Pivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.22)
@@ -175,57 +218,67 @@ mesh = SubResource("mesh_tail3")
 surface_material_override/0 = SubResource("mat_dark")
 
 [node name="LeftLegPivot" type="Node3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0.75, -0.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.78, -0.1)
 
 [node name="Thigh" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.18, 0.02)
+transform = Transform3D(1, 0, 0, 0, 0.9394, -0.3429, 0, 0.3429, 0.9394, 0, -0.16, 0.05)
 mesh = SubResource("mesh_thigh")
 surface_material_override/0 = SubResource("mat_scales")
 
 [node name="Shin" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -0.02)
+transform = Transform3D(1, 0, 0, 0, 0.8776, 0.4794, 0, -0.4794, 0.8776, 0, -0.46, -0.05)
 mesh = SubResource("mesh_shin")
 surface_material_override/0 = SubResource("mat_dark")
 
 [node name="Foot" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.72, 0.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.72, 0.06)
 mesh = SubResource("mesh_foot")
 surface_material_override/0 = SubResource("mat_dark")
 
 [node name="Claw" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.68, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, -0.66, 0.19)
 mesh = SubResource("mesh_claw")
 surface_material_override/0 = SubResource("mat_teeth")
 
 [node name="RightLegPivot" type="Node3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.75, -0.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24, 0.78, -0.1)
 
 [node name="Thigh" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.18, 0.02)
+transform = Transform3D(1, 0, 0, 0, 0.9394, -0.3429, 0, 0.3429, 0.9394, 0, -0.16, 0.05)
 mesh = SubResource("mesh_thigh")
 surface_material_override/0 = SubResource("mat_scales")
 
 [node name="Shin" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -0.02)
+transform = Transform3D(1, 0, 0, 0, 0.8776, 0.4794, 0, -0.4794, 0.8776, 0, -0.46, -0.05)
 mesh = SubResource("mesh_shin")
 surface_material_override/0 = SubResource("mat_dark")
 
 [node name="Foot" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.72, 0.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.72, 0.06)
 mesh = SubResource("mesh_foot")
 surface_material_override/0 = SubResource("mat_dark")
 
 [node name="Claw" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.68, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, -0.66, 0.19)
 mesh = SubResource("mesh_claw")
 surface_material_override/0 = SubResource("mat_teeth")
 
-[node name="ArmLeft" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.85, 0.42)
+[node name="ArmL" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 0.9211, 0.3894, 0, -0.3894, 0.9211, 0.19, 0.88, 0.4)
 mesh = SubResource("mesh_arm")
 surface_material_override/0 = SubResource("mat_scales")
 
-[node name="ArmRight" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.85, 0.42)
+[node name="ArmClawL" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.19, 0.74, 0.48)
+mesh = SubResource("mesh_armclaw")
+surface_material_override/0 = SubResource("mat_teeth")
+
+[node name="ArmR" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 0.9211, 0.3894, 0, -0.3894, 0.9211, -0.19, 0.88, 0.4)
 mesh = SubResource("mesh_arm")
 surface_material_override/0 = SubResource("mat_scales")
+
+[node name="ArmClawR" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19, 0.74, 0.48)
+mesh = SubResource("mesh_armclaw")
+surface_material_override/0 = SubResource("mat_teeth")

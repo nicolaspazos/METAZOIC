@@ -15,6 +15,7 @@ var _blood_mat: StandardMaterial3D
 var _gib_mat: StandardMaterial3D
 var _pool_mat: StandardMaterial3D
 var _spark_mat: StandardMaterial3D
+var _dust_mat: StandardMaterial3D
 var _hitstopped := false
 
 
@@ -37,6 +38,10 @@ func _ready() -> void:
 	_spark_mat.emission = Color(0.4, 1.0, 0.5)
 	_spark_mat.emission_energy_multiplier = 2.0
 
+	_dust_mat = StandardMaterial3D.new()
+	_dust_mat.albedo_color = Color(0.5, 0.42, 0.3)
+	_dust_mat.roughness = 1.0
+
 
 ## Directional spray — use when something takes a hit. `dir` points away from the attacker.
 func spray(pos: Vector3, dir: Vector3, amount: int = 18) -> void:
@@ -51,6 +56,12 @@ func burst(pos: Vector3, amount: int = 48) -> void:
 ## Green parasite sparks — shield blocks and power impacts.
 func spark(pos: Vector3, dir: Vector3 = Vector3.UP, amount: int = 14) -> void:
 	_emit_particles(pos, dir, amount, 60.0, 3.0, 7.0, 0.4, _spark_mat)
+
+
+## Dust puff — landings, dodges, charges. Drifts up instead of falling.
+func puff(pos: Vector3, amount: int = 10) -> void:
+	_emit_particles(pos, Vector3.UP, amount, 180.0, 0.8, 2.4, 0.55, _dust_mat,
+		Vector3(0, 1.0, 0), 0.16)
 
 
 ## A dark pool that grows on the ground and lingers, then fades.
@@ -151,7 +162,8 @@ func hitstop(time_scale: float = 0.05, duration: float = 0.07) -> void:
 
 func _emit_particles(pos: Vector3, dir: Vector3, amount: int, spread: float,
 		vel_min: float, vel_max: float, lifetime: float,
-		mat: StandardMaterial3D) -> void:
+		mat: StandardMaterial3D, gravity := Vector3(0, -30, 0),
+		size := 0.09) -> void:
 	var p := GPUParticles3D.new()
 	p.one_shot = true
 	p.explosiveness = 1.0
@@ -163,13 +175,13 @@ func _emit_particles(pos: Vector3, dir: Vector3, amount: int, spread: float,
 	m.spread = spread
 	m.initial_velocity_min = vel_min
 	m.initial_velocity_max = vel_max
-	m.gravity = Vector3(0, -30, 0)
+	m.gravity = gravity
 	m.scale_min = 0.6
 	m.scale_max = 1.4
 	p.process_material = m
 
 	var mesh := BoxMesh.new()
-	mesh.size = Vector3(0.09, 0.09, 0.09)
+	mesh.size = Vector3(size, size, size)
 	mesh.material = mat
 	p.draw_pass_1 = mesh
 

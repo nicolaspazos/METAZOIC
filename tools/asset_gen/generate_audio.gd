@@ -199,6 +199,45 @@ func _sfx() -> void:
 	_tone(b, 0.05, 0.4, 120, 70, 0.3)
 	_save("sweep", b)
 
+	b = _buf(0.42)                     # heavy overhead swing — deeper, slower
+	_whoosh(b, 0.0, 0.42, 1.0, 0.03, 0.22)
+	_tone(b, 0.05, 0.3, 75, 50, 0.35)
+	_save("heavy", b)
+
+	b = _buf(0.16)                     # landing thud
+	_burst(b, 0.0, 0.12, 0.8, 0.25, 0.05)
+	_tone(b, 0.0, 0.1, 70, 45, 0.7)
+	_save("land", b)
+
+	b = _buf(0.4)                      # heartbeat — two low thumps
+	_tone(b, 0.0, 0.1, 58, 48, 1.0)
+	_tone(b, 0.2, 0.09, 52, 44, 0.75)
+	_save("heartbeat", b)
+
+	b = _buf(0.35)                     # bird call 1 — two descending chirps
+	_tone(b, 0.0, 0.09, 2200, 1400, 0.5)
+	_tone(b, 0.14, 0.1, 1800, 1100, 0.45)
+	_save("bird1", b)
+
+	b = _buf(0.4)                      # bird call 2 — trill
+	for i in 5:
+		_tone(b, i * 0.055, 0.05, 1600 if i % 2 == 0 else 1950, 1600 if i % 2 == 0 else 1950, 0.4)
+	_save("bird2", b)
+
+	b = _buf(0.42)                     # raptor idle chitter — fast clicks
+	for i in 6:
+		_burst(b, i * 0.055, 0.03, 0.7, 0.85, 0.5)
+	_tone(b, 0.0, 0.35, 520, 430, 0.15, 3, 0.2)
+	_save("chitter", b)
+
+	b = _buf(1.6)                      # distant roar on the horizon
+	_tone(b, 0.0, 1.2, 72, 44, 0.55, 3, 0.18)
+	_tone(b, 0.05, 1.0, 55, 36, 0.3, 1, 0.12)
+	_burst(b, 0.1, 1.2, 0.4, 0.06, 0.02)
+	for i in range(b.size() - 1, int(0.3 * SR), -1):  # cheap cavern echo
+		b[i] += b[i - int(0.3 * SR)] * 0.4
+	_save("distant_roar", b)
+
 
 # ---------------------------------------------------------------- ambient loops
 
@@ -226,36 +265,47 @@ func _ambient() -> void:
 # ---------------------------------------------------------------- music
 
 func _music() -> void:
-	# Primal dusk-hunt loop in E minor pentatonic. 16 bars @ 95 BPM ≈ 40s.
+	# Primal dusk-hunt loop in E minor pentatonic. 24 bars @ 95 BPM ≈ 61s.
+	# Structure: drums+drone (0-3) → +bass (4-7) → melody A (8-15) →
+	# section B: double-time percussion + high melody (16-23) → loops.
 	var spb := 60.0 / 95.0            # seconds per beat
 	var bar := spb * 4.0
-	var bars := 16
+	var bars := 24
 	var len := bar * bars
 	var b := _buf(len + 0.1)
 
 	# Drone bed — E2 + B2 with a slow swell (period divides the loop → seamless).
-	var swell := len / 4.0
+	var swell := len / 6.0
 	for i in int(len * SR):
 		var t := float(i) / SR
 		var sw := 0.75 + 0.25 * sin(TAU * t / swell)
 		b[i] += (sin(TAU * 82.41 * t) * 0.1 + sin(TAU * 123.47 * t) * 0.06) * sw
 
-	# Drums — tribal kicks and toms, shaker eighths.
+	# Drums — tribal kicks and toms; section B doubles the shaker and adds rims.
 	for bi in bars:
 		var t0 := bi * bar
+		var section_b := bi >= 16
 		_tone(b, t0, 0.24, 160, 45, 1.0)                    # kick on 1
 		_tone(b, t0 + 2.0 * spb, 0.24, 160, 45, 0.9)        # kick on 3
 		_tone(b, t0 + 1.0 * spb, 0.2, 190, 115, 0.55)       # tom hi
 		_tone(b, t0 + 3.0 * spb, 0.2, 145, 90, 0.6)         # tom lo
+		if section_b:
+			_tone(b, t0 + 1.5 * spb, 0.15, 210, 140, 0.45)  # extra syncopation
+			_tone(b, t0 + 3.5 * spb, 0.15, 165, 100, 0.5)
 		if bi % 4 == 3:
 			_tone(b, t0 + 3.5 * spb, 0.18, 200, 120, 0.6)   # fill
-		for k in 8:
-			var amp := 0.16 if k % 2 == 1 else 0.09
-			_burst(b, t0 + k * spb * 0.5, 0.05, amp, 0.85, 0.5)
+		var shaker_steps := 16 if section_b else 8
+		for k in shaker_steps:
+			var step := spb * (4.0 / shaker_steps)
+			var amp := 0.15 if k % 2 == 1 else 0.08
+			_burst(b, t0 + k * step, 0.045, amp, 0.85, 0.5)
+		if section_b and bi % 2 == 1:
+			_tone(b, t0 + 2.5 * spb, 0.05, 1900, 1700, 0.18)  # rim click
 
 	# Bass pulse from bar 4 — eighth notes on the bar's root.
 	var roots := [82.41, 82.41, 82.41, 82.41, 98.0, 98.0, 110.0, 110.0,
-		82.41, 82.41, 98.0, 98.0, 73.42, 110.0, 82.41, 82.41]
+		82.41, 82.41, 98.0, 98.0, 73.42, 110.0, 82.41, 82.41,
+		82.41, 82.41, 98.0, 110.0, 73.42, 73.42, 82.41, 82.41]
 	for bi in range(4, bars):
 		var t0 := bi * bar
 		var f: float = roots[bi]
@@ -264,14 +314,17 @@ func _music() -> void:
 			_tone(b, t0 + k * spb * 0.5, spb * 0.42, f, f, amp, 3)
 			_tone(b, t0 + k * spb * 0.5, spb * 0.42, f * 0.5, f * 0.5, amp * 0.6)
 
-	# Melody from bar 8 — sparse bone-flute phrases (E minor pentatonic).
+	# Melody — sparse bone-flute phrases (E minor pentatonic).
 	const E4 := 329.63
 	const G4 := 392.0
 	const A4 := 440.0
 	const B4 := 493.88
 	const D5 := 587.33
 	const E5 := 659.26
-	var phrase := [
+	const G5 := 783.99
+	const A5 := 880.0
+	# Phrase A: bars 8-15 (beats relative to bar 8).
+	var phrase_a := [
 		[0.0, E4, 1.5], [2.0, G4, 1.0], [3.0, A4, 1.0], [4.0, B4, 2.0],
 		[6.5, A4, 0.5], [7.0, G4, 1.0], [8.0, E4, 2.0], [10.0, A4, 1.5],
 		[12.0, B4, 1.0], [13.5, D5, 1.5], [15.0, B4, 1.0], [16.0, E5, 2.0],
@@ -279,12 +332,28 @@ func _music() -> void:
 		[23.0, A4, 1.0], [24.0, E4, 1.5], [26.0, G4, 1.0], [27.0, A4, 1.0],
 		[28.0, E4, 3.0],
 	]
-	for note in phrase:
+	# Phrase B: bars 16-23 — higher, more urgent (the hunt closes in).
+	var phrase_b := [
+		[0.0, E5, 1.0], [1.0, D5, 0.5], [1.5, B4, 0.5], [2.0, D5, 1.0],
+		[3.0, E5, 1.0], [4.0, G5, 1.5], [5.5, E5, 0.5], [6.0, D5, 1.0],
+		[7.0, B4, 1.0], [8.0, A5, 1.5], [10.0, G5, 1.0], [11.0, E5, 1.0],
+		[12.0, D5, 1.5], [13.5, B4, 0.5], [14.0, D5, 1.0], [15.0, E5, 1.0],
+		[16.0, G5, 2.0], [18.0, E5, 1.0], [19.0, D5, 1.0], [20.0, B4, 2.0],
+		[22.0, A4, 1.0], [23.0, B4, 1.0], [24.0, E5, 1.5], [26.0, D5, 1.0],
+		[27.0, B4, 1.0], [28.0, A4, 1.5], [30.0, G4, 1.0], [31.0, E4, 1.0],
+	]
+	for note in phrase_a:
 		var t: float = 8.0 * bar + note[0] * spb
 		var dur: float = note[2] * spb * 0.95
 		var freq: float = note[1]
 		_tone(b, t, dur, freq, freq, 0.3, 0, 0.12, 0.03)
 		_tone(b, t, dur, freq * 2.0, freq * 2.0, 0.07, 0, 0.12, 0.03)
+	for note in phrase_b:
+		var t: float = 16.0 * bar + note[0] * spb
+		var dur: float = note[2] * spb * 0.95
+		var freq: float = note[1]
+		_tone(b, t, dur, freq, freq, 0.26, 0, 0.14, 0.03)
+		_tone(b, t, dur, freq * 0.5, freq * 0.5, 0.08, 0, 0.14, 0.03)
 
 	b.resize(int(len * SR))
 	_save("music", _loopify(b, 0.04))

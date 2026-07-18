@@ -13,6 +13,9 @@ const SIZE := 180.0
 const RES := 90                       # quads per side
 const CRATER_POS := Vector2(0.0, -18.0)
 const CRATER_FLOOR := -1.5
+const POND_POS := Vector2(26.0, 26.0)
+const POND_FLOOR := -1.7
+const WATER_LEVEL := -0.55
 
 var _heights := PackedFloat32Array()  # (RES+1)^2 grid
 var _step := SIZE / RES
@@ -30,6 +33,7 @@ func _ready() -> void:
 	_patch_noise.frequency = 0.06
 	_compute_heights()
 	_build_mesh_and_collision()
+	_build_water()
 
 
 ## Ground height at any world XZ (bilinear over the height grid).
@@ -72,6 +76,11 @@ func _compute_heights() -> void:
 			if d < 9.0:
 				h = lerpf(CRATER_FLOOR, h, smoothstep(0.0, 9.0, d))
 			h += 0.9 * exp(-pow((d - 9.5) / 2.0, 2.0))
+
+			# The pond basin (no rim — a natural waterhole).
+			var pd := Vector2(x, z).distance_to(POND_POS)
+			if pd < 8.0:
+				h = lerpf(POND_FLOOR, h, smoothstep(0.0, 8.0, pd))
 
 			_heights[j * (RES + 1) + i] = h
 
@@ -137,6 +146,22 @@ func _tri(verts: PackedVector3Array, normals: PackedVector3Array,
 		uvs.append(Vector2(p.x, p.z) / 3.5)
 
 
+## The pond surface — animated scrolling water plane over the basin.
+func _build_water() -> void:
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://assets/shaders/psx_water.gdshader")
+	mat.set_shader_parameter("albedo_tex", load("res://assets/textures/water.png"))
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(17.0, 17.0)
+	plane.subdivide_width = 8
+	plane.subdivide_depth = 8
+	var mi := MeshInstance3D.new()
+	mi.mesh = plane
+	mi.material_override = mat
+	mi.position = Vector3(POND_POS.x, WATER_LEVEL, POND_POS.y)
+	add_child(mi)
+
+
 ## RGB = scorch/tone shading, A = grass→dirt blend for the terrain shader.
 func _vertex_color(p: Vector3) -> Color:
 	var d := Vector2(p.x, p.z).distance_to(CRATER_POS)
@@ -144,6 +169,9 @@ func _vertex_color(p: Vector3) -> Color:
 	var dirt := 1.0 - smoothstep(9.0, 13.0, d)          # bare dirt in the crater
 	if _patch_noise.get_noise_2d(p.x, p.z) > 0.42:      # scattered dirt patches
 		dirt = maxf(dirt, 0.7)
+	# Muddy shore ring around the pond.
+	var pd := Vector2(p.x, p.z).distance_to(POND_POS)
+	dirt = maxf(dirt, 1.0 - smoothstep(6.0, 10.0, pd))
 	var tone := 0.85 + 0.3 * (_patch_noise.get_noise_2d(p.x * 3.0, p.z * 3.0) * 0.5 + 0.5)
 	var shade := tone * lerpf(1.0, 0.35, burn)
 	return Color(shade, shade, shade, dirt)

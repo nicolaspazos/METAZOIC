@@ -1,0 +1,55 @@
+[gd_scene load_steps=7 format=3 uid="uid://cbonesmetazoic01"]
+
+[ext_resource type="Shader" path="res://assets/shaders/psx_lit.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://assets/textures/rock.png" id="2"]
+
+[sub_resource type="ShaderMaterial" id="mat_bone"]
+shader = ExtResource("1")
+shader_parameter/albedo_tex = ExtResource("2")
+shader_parameter/tint = Color(1.55, 1.5, 1.32, 1)
+shader_parameter/uv_scale = Vector2(1, 1)
+shader_parameter/jitter = 160.0
+
+[sub_resource type="BoxMesh" id="mesh_skull"]
+size = Vector3(0.5, 0.38, 0.55)
+
+[sub_resource type="BoxMesh" id="mesh_snout"]
+size = Vector3(0.3, 0.2, 0.34)
+
+[sub_resource type="BoxMesh" id="mesh_rib"]
+size = Vector3(0.07, 0.62, 0.07)
+
+[sub_resource type="BoxMesh" id="mesh_femur"]
+size = Vector3(0.09, 0.09, 0.62)
+
+[node name="Bones" type="Node3D"]
+
+[node name="Skull" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9553, 0, 0.2955, 0, 1, 0, -0.2955, 0, 0.9553, 0, 0.19, 0)
+mesh = SubResource("mesh_skull")
+surface_material_override/0 = SubResource("mat_bone")
+
+[node name="Snout" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9553, 0, 0.2955, 0, 1, 0, -0.2955, 0, 0.9553, 0.13, 0.1, 0.42)
+mesh = SubResource("mesh_snout")
+surface_material_override/0 = SubResource("mat_bone")
+
+[node name="Rib1" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9211, -0.3894, 0, 0.3894, 0.9211, 0, 0, 0, 1, -0.7, 0.24, -0.3)
+mesh = SubResource("mesh_rib")
+surface_material_override/0 = SubResource("mat_bone")
+
+[node name="Rib2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9211, 0.3894, 0, -0.3894, 0.9211, 0, 0, 0, 1, -1.05, 0.22, -0.35)
+mesh = SubResource("mesh_rib")
+surface_material_override/0 = SubResource("mat_bone")
+
+[node name="Rib3" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9553, -0.2955, 0, 0.2955, 0.9553, 0, 0, 0, 1, -0.88, 0.26, -0.6)
+mesh = SubResource("mesh_rib")
+surface_material_override/0 = SubResource("mat_bone")
+
+[node name="Femur" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.8253, 0, 0.5646, 0, 1, 0, -0.5646, 0, 0.8253, 0.5, 0.06, -0.7)
+mesh = SubResource("mesh_femur")
+surface_material_override/0 = SubResource("mat_bone")

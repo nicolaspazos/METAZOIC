@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://b0metazoicplayer0"]
+[gd_scene load_steps=46 format=3 uid="uid://b0metazoicplayer0"]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/player/caveman_visual.gd" id="2"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/bark.png" id="6"]
 [ext_resource type="Texture2D" path="res://assets/textures/rock.png" id="7"]
 [ext_resource type="Texture2D" path="res://assets/textures/crystal.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/textures/face.png" id="9"]
 
 [sub_resource type="CapsuleShape3D" id="shape_body"]
 radius = 0.4
@@ -55,41 +56,82 @@ shader_parameter/tint = Color(1.4, 1.7, 1.4, 1)
 shader_parameter/uv_scale = Vector2(1, 1)
 shader_parameter/jitter = 160.0
 
-[sub_resource type="BoxMesh" id="mesh_torso"]
-size = Vector3(0.56, 0.55, 0.36)
+[sub_resource type="ShaderMaterial" id="mat_face"]
+shader = ExtResource("3")
+shader_parameter/albedo_tex = ExtResource("9")
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/uv_scale = Vector2(1, 1)
+shader_parameter/jitter = 160.0
+
+[sub_resource type="ShaderMaterial" id="mat_teeth"]
+shader = ExtResource("3")
+shader_parameter/albedo_tex = ExtResource("7")
+shader_parameter/tint = Color(1.6, 1.55, 1.4, 1)
+shader_parameter/uv_scale = Vector2(1, 1)
+shader_parameter/jitter = 160.0
 
 [sub_resource type="BoxMesh" id="mesh_pelvis"]
-size = Vector3(0.5, 0.28, 0.32)
+size = Vector3(0.46, 0.24, 0.3)
+
+[sub_resource type="BoxMesh" id="mesh_loin"]
+size = Vector3(0.24, 0.34, 0.05)
+
+[sub_resource type="BoxMesh" id="mesh_belly"]
+size = Vector3(0.44, 0.3, 0.3)
+
+[sub_resource type="BoxMesh" id="mesh_chest"]
+size = Vector3(0.56, 0.4, 0.36)
+
+[sub_resource type="BoxMesh" id="mesh_strap"]
+size = Vector3(0.14, 0.7, 0.4)
+
+[sub_resource type="BoxMesh" id="mesh_shoulder"]
+size = Vector3(0.18, 0.16, 0.2)
+
+[sub_resource type="BoxMesh" id="mesh_neck"]
+size = Vector3(0.14, 0.12, 0.14)
 
 [sub_resource type="BoxMesh" id="mesh_head"]
-size = Vector3(0.34, 0.34, 0.36)
+size = Vector3(0.3, 0.32, 0.34)
 
-[sub_resource type="BoxMesh" id="mesh_jaw"]
-size = Vector3(0.3, 0.12, 0.32)
+[sub_resource type="QuadMesh" id="mesh_faceplate"]
+size = Vector2(0.26, 0.26)
 
 [sub_resource type="BoxMesh" id="mesh_nose"]
-size = Vector3(0.08, 0.12, 0.1)
+size = Vector3(0.07, 0.1, 0.08)
 
 [sub_resource type="BoxMesh" id="mesh_brow"]
-size = Vector3(0.3, 0.09, 0.12)
+size = Vector3(0.28, 0.06, 0.1)
 
-[sub_resource type="BoxMesh" id="mesh_hair"]
-size = Vector3(0.4, 0.18, 0.42)
+[sub_resource type="BoxMesh" id="mesh_hairtop"]
+size = Vector3(0.36, 0.16, 0.4)
 
 [sub_resource type="BoxMesh" id="mesh_mane"]
-size = Vector3(0.36, 0.5, 0.14)
+size = Vector3(0.34, 0.4, 0.12)
 
-[sub_resource type="BoxMesh" id="mesh_arm"]
-size = Vector3(0.17, 0.5, 0.17)
+[sub_resource type="BoxMesh" id="mesh_tuft"]
+size = Vector3(0.18, 0.12, 0.3)
+
+[sub_resource type="BoxMesh" id="mesh_tooth"]
+size = Vector3(0.05, 0.09, 0.04)
+
+[sub_resource type="BoxMesh" id="mesh_upperarm"]
+size = Vector3(0.16, 0.34, 0.16)
+
+[sub_resource type="BoxMesh" id="mesh_forearm"]
+size = Vector3(0.14, 0.3, 0.14)
 
 [sub_resource type="BoxMesh" id="mesh_hand"]
-size = Vector3(0.15, 0.16, 0.17)
+size = Vector3(0.13, 0.14, 0.15)
 
-[sub_resource type="BoxMesh" id="mesh_leg"]
-size = Vector3(0.2, 0.85, 0.22)
+[sub_resource type="BoxMesh" id="mesh_thigh"]
+size = Vector3(0.19, 0.4, 0.22)
+
+[sub_resource type="BoxMesh" id="mesh_shin"]
+size = Vector3(0.16, 0.42, 0.18)
 
 [sub_resource type="BoxMesh" id="mesh_foot"]
-size = Vector3(0.2, 0.11, 0.32)
+size = Vector3(0.18, 0.1, 0.3)
 
 [sub_resource type="BoxMesh" id="mesh_club_handle"]
 size = Vector3(0.09, 0.7, 0.09)
@@ -122,125 +164,200 @@ shape = SubResource("shape_body")
 script = ExtResource("2")
 
 [node name="Pelvis" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, 0)
 mesh = SubResource("mesh_pelvis")
 surface_material_override/0 = SubResource("mat_fur")
 
+[node name="LoinFront" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0.17)
+mesh = SubResource("mesh_loin")
+surface_material_override/0 = SubResource("mat_fur")
+
+[node name="LoinBack" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, -0.17)
+mesh = SubResource("mesh_loin")
+surface_material_override/0 = SubResource("mat_fur")
+
+[node name="Belly" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, 0)
+mesh = SubResource("mesh_belly")
+surface_material_override/0 = SubResource("mat_skin")
+
 [node name="Torso" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
-mesh = SubResource("mesh_torso")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+mesh = SubResource("mesh_chest")
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="Strap" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(0.796, -0.605, 0, 0.605, 0.796, 0, 0, 0, 1, 0, 1.58, 0.005)
+mesh = SubResource("mesh_strap")
+surface_material_override/0 = SubResource("mat_fur")
+
+[node name="ShoulderL" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37, 1.78, 0)
+mesh = SubResource("mesh_shoulder")
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="ShoulderR" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.37, 1.78, 0)
+mesh = SubResource("mesh_shoulder")
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="Neck" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.88, 0)
+mesh = SubResource("mesh_neck")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="Head" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.02, 0)
 mesh = SubResource("mesh_head")
 surface_material_override/0 = SubResource("mat_skin")
 
-[node name="Jaw" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0.03)
-mesh = SubResource("mesh_jaw")
-surface_material_override/0 = SubResource("mat_skin")
+[node name="FacePlate" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.01, 0.178)
+mesh = SubResource("mesh_faceplate")
+surface_material_override/0 = SubResource("mat_face")
 
 [node name="Nose" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.84, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.99, 0.2)
 mesh = SubResource("mesh_nose")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="Brow" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0.16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0.16)
 mesh = SubResource("mesh_brow")
 surface_material_override/0 = SubResource("mat_hair")
 
-[node name="Hair" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.03, 0)
-mesh = SubResource("mesh_hair")
+[node name="HairTop" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, -0.01)
+mesh = SubResource("mesh_hairtop")
 surface_material_override/0 = SubResource("mat_hair")
 
 [node name="Mane" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -0.2)
 mesh = SubResource("mesh_mane")
 surface_material_override/0 = SubResource("mat_hair")
 
-[node name="LeftArmPivot" type="Node3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37, 1.58, 0)
+[node name="Tuft" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(0.9553, -0.2955, 0, 0.2955, 0.9553, 0, 0, 0, 1, 0.08, 2.24, 0.06)
+mesh = SubResource("mesh_tuft")
+surface_material_override/0 = SubResource("mat_hair")
 
-[node name="Arm" type="MeshInstance3D" parent="Mesh/LeftArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
-mesh = SubResource("mesh_arm")
+[node name="Tooth1" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.09, 1.79, 0.17)
+mesh = SubResource("mesh_tooth")
+surface_material_override/0 = SubResource("mat_teeth")
+
+[node name="Tooth2" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.77, 0.19)
+mesh = SubResource("mesh_tooth")
+surface_material_override/0 = SubResource("mat_teeth")
+
+[node name="Tooth3" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.09, 1.79, 0.17)
+mesh = SubResource("mesh_tooth")
+surface_material_override/0 = SubResource("mat_teeth")
+
+[node name="LeftArmPivot" type="Node3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.74, 0)
+
+[node name="UpperArm" type="MeshInstance3D" parent="Mesh/LeftArmPivot"]
+transform = Transform3D(0.995, -0.0998, 0, 0.0998, 0.995, 0, 0, 0, 1, 0, -0.15, 0)
+mesh = SubResource("mesh_upperarm")
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="Forearm" type="MeshInstance3D" parent="Mesh/LeftArmPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9553, 0.2955, 0, -0.2955, 0.9553, 0.02, -0.42, 0.05)
+mesh = SubResource("mesh_forearm")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="Hand" type="MeshInstance3D" parent="Mesh/LeftArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.52, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03, -0.57, 0.1)
 mesh = SubResource("mesh_hand")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="RightArmPivot" type="Node3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.37, 1.58, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.74, 0)
 
-[node name="Arm" type="MeshInstance3D" parent="Mesh/RightArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
-mesh = SubResource("mesh_arm")
+[node name="UpperArm" type="MeshInstance3D" parent="Mesh/RightArmPivot"]
+transform = Transform3D(0.995, 0.0998, 0, -0.0998, 0.995, 0, 0, 0, 1, 0, -0.15, 0)
+mesh = SubResource("mesh_upperarm")
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="Forearm" type="MeshInstance3D" parent="Mesh/RightArmPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9553, 0.2955, 0, -0.2955, 0.9553, -0.02, -0.42, 0.05)
+mesh = SubResource("mesh_forearm")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="Hand" type="MeshInstance3D" parent="Mesh/RightArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.52, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03, -0.57, 0.1)
 mesh = SubResource("mesh_hand")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="ClubHandle" type="MeshInstance3D" parent="Mesh/RightArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.78, 0.08)
+transform = Transform3D(1, 0, 0, 0, 0.9888, 0.1494, 0, -0.1494, 0.9888, -0.03, -0.85, 0.12)
 mesh = SubResource("mesh_club_handle")
 surface_material_override/0 = SubResource("mat_wood")
 
 [node name="ClubHead" type="MeshInstance3D" parent="Mesh/RightArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.18, 0.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03, -1.22, 0.18)
 mesh = SubResource("mesh_club_head")
 surface_material_override/0 = SubResource("mat_stone")
 
 [node name="Spike1" type="MeshInstance3D" parent="Mesh/RightArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, -1.22, 0.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, -1.26, 0.18)
 mesh = SubResource("mesh_spike")
 surface_material_override/0 = SubResource("mat_stone")
 
 [node name="Spike2" type="MeshInstance3D" parent="Mesh/RightArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, -1.32, 0.08)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, -1.3, 0.18)
 mesh = SubResource("mesh_spike")
 surface_material_override/0 = SubResource("mat_stone")
 
 [node name="LeftLegPivot" type="Node3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1.02, 0)
 
-[node name="Leg" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45, 0)
-mesh = SubResource("mesh_leg")
+[node name="Thigh" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9968, -0.0799, 0, 0.0799, 0.9968, 0, -0.2, 0.01)
+mesh = SubResource("mesh_thigh")
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="Shin" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9968, 0.0799, 0, -0.0799, 0.9968, 0, -0.6, -0.02)
+mesh = SubResource("mesh_shin")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="Foot" type="MeshInstance3D" parent="Mesh/LeftLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.9, 0.06)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.94, 0.06)
 mesh = SubResource("mesh_foot")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="RightLegPivot" type="Node3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.02, 0)
 
-[node name="Leg" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45, 0)
-mesh = SubResource("mesh_leg")
+[node name="Thigh" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9968, -0.0799, 0, 0.0799, 0.9968, 0, -0.2, 0.01)
+mesh = SubResource("mesh_thigh")
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="Shin" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9968, 0.0799, 0, -0.0799, 0.9968, 0, -0.6, -0.02)
+mesh = SubResource("mesh_shin")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="Foot" type="MeshInstance3D" parent="Mesh/RightLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.9, 0.06)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.94, 0.06)
 mesh = SubResource("mesh_foot")
 surface_material_override/0 = SubResource("mat_skin")
 
 [node name="ShieldFrill" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.75)
 visible = false
 mesh = SubResource("mesh_frill")
 surface_material_override/0 = SubResource("mat_crystal")
 
 [node name="JawTop" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.78, 1.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 1.15)
 visible = false
 mesh = SubResource("mesh_jawfx")
 surface_material_override/0 = SubResource("mat_crystal")
@@ -261,7 +378,7 @@ monitorable = false
 shape = SubResource("shape_hitbox")
 
 [node name="YawPivot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
 
 [node name="PitchPivot" type="Node3D" parent="YawPivot"]
 

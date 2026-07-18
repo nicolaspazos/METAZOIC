@@ -26,6 +26,10 @@ func _init() -> void:
 	_fur()
 	_scales()
 	_crystal()
+	_face()
+	_water()
+	_cloud()
+	_sun()
 	print("[gen] all textures written to assets/textures/")
 	quit(0)
 
@@ -187,6 +191,89 @@ func _scales() -> void:
 		if s > 1.05:
 			c *= 0.55
 		return c)
+
+
+## The caveman's face, painted PS2-style onto a quad: heavy brow, eyes, nostrils,
+## mouth, stubble. 64x64 so the features stay chunky.
+func _face() -> void:
+	var fs := 64
+	var img := Image.create(fs, fs, false, Image.FORMAT_RGBA8)
+	var n := _noise(65, 0.15, 2)
+	for y in fs:
+		for x in fs:
+			var c := Color(0.74, 0.5, 0.34) * (0.94 + 0.12 * (n.get_noise_2d(x, y) * 0.5 + 0.5))
+			# Heavy brow shadow band.
+			if y >= 10 and y <= 19:
+				c *= 0.55
+			# Eye whites (two ovals under the brow).
+			var in_left := x >= 15 and x <= 26 and y >= 21 and y <= 28
+			var in_right := x >= 37 and x <= 48 and y >= 21 and y <= 28
+			if in_left or in_right:
+				c = Color(0.85, 0.82, 0.72)
+				# Pupils.
+				if (absi(x - 21) <= 1 or absi(x - 42) <= 1) and y >= 23 and y <= 27:
+					c = Color(0.1, 0.07, 0.05)
+			# Nose shadow + nostrils.
+			if y >= 34 and y <= 38 and absi(x - 32) <= 3:
+				c *= 0.8
+			if y >= 37 and y <= 39 and (absi(x - 29) <= 1 or absi(x - 35) <= 1):
+				c = Color(0.25, 0.15, 0.1)
+			# Mouth line.
+			if y >= 46 and y <= 48 and x >= 21 and x <= 43:
+				c = Color(0.3, 0.16, 0.12)
+			# Stubble.
+			if y >= 50 and n.get_noise_2d(x * 4, y * 4) > 0.15:
+				c *= 0.7
+			img.set_pixel(x, y, _q(c))
+	img.save_png(OUT + "face.png")
+	print("  wrote face.png")
+
+
+func _water() -> void:
+	var wave := _noise(100, 0.06, 3)
+	var glint := _noise(101, 0.2, 1)
+	_paint("water", func(x, y):
+		var c := Color(0.1, 0.28, 0.3).lerp(Color(0.16, 0.4, 0.42), _t01(wave, x, y))
+		# Bright caustic ripple lines.
+		var v := sin(TAU * (float(y) / S * 4.0 + _tiled(wave, x, y) * 1.2))
+		if v > 0.82:
+			c = c.lerp(Color(0.55, 0.8, 0.75), 0.7)
+		if _tiled(glint, x, y) > 0.62:
+			c *= 1.2
+		return c)
+
+
+## Soft-alpha cloud blob for billboard quads (alpha stays smooth — no hard cut).
+func _cloud() -> void:
+	var cs := 64
+	var img := Image.create(cs, cs, false, Image.FORMAT_RGBA8)
+	var n := _noise(110, 0.08, 3)
+	for y in cs:
+		for x in cs:
+			var dx := (x - cs / 2.0) / (cs / 2.0)
+			var dy := (y - cs / 2.0) / (cs / 2.0) * 1.8  # squashed ellipse
+			var falloff := clampf(1.0 - sqrt(dx * dx + dy * dy), 0.0, 1.0)
+			var a := clampf(falloff * 1.6 * (0.55 + 0.45 * (n.get_noise_2d(x * 2, y * 2) * 0.5 + 0.5)) - 0.12, 0.0, 1.0)
+			img.set_pixel(x, y, Color(0.98, 0.9, 0.85, a))
+	img.save_png(OUT + "cloud.png")
+	print("  wrote cloud.png")
+
+
+## Soft radial glow for the sun billboard.
+func _sun() -> void:
+	var ss := 64
+	var img := Image.create(ss, ss, false, Image.FORMAT_RGBA8)
+	for y in ss:
+		for x in ss:
+			var dx := (x - ss / 2.0) / (ss / 2.0)
+			var dy := (y - ss / 2.0) / (ss / 2.0)
+			var d := sqrt(dx * dx + dy * dy)
+			var core := clampf(1.0 - d * 3.2, 0.0, 1.0)
+			var halo := clampf(1.0 - d, 0.0, 1.0)
+			var a := clampf(core + halo * halo * 0.55, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 0.9, 0.7, a))
+	img.save_png(OUT + "sun.png")
+	print("  wrote sun.png")
 
 
 func _crystal() -> void:

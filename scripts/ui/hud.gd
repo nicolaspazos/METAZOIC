@@ -39,6 +39,9 @@ var _boss_back: ColorRect
 var _boss_fill: ColorRect
 var _boss: Node = null
 var _boss_fill_width := 0.0
+var _low_pulse: ColorRect
+var _beat_timer := 0.0
+var _pulse_t := 0.0
 
 
 func _ready() -> void:
@@ -48,6 +51,7 @@ func _ready() -> void:
 	_build_power_bar()
 	_build_banner()
 	_build_boss_bar()
+	_build_low_pulse()
 	PowerSystem.power_absorbed.connect(_on_power_absorbed)
 
 	_player = get_tree().get_first_node_in_group("player")
@@ -60,7 +64,17 @@ func _ready() -> void:
 	_on_health_changed(_player.health, _player.max_health)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	# Low-health warning: pulsing red edges + heartbeat.
+	if _player and _player.health < 30.0 and _player.health > 0.0:
+		_pulse_t += delta * 5.0
+		_low_pulse.color.a = 0.1 + 0.09 * sin(_pulse_t)
+		_beat_timer -= delta
+		if _beat_timer <= 0.0:
+			_beat_timer = 1.05
+			Sfx.play("heartbeat", -5.0)
+	elif _low_pulse.color.a > 0.0:
+		_low_pulse.color.a = 0.0
 	# Power slots: dark while locked, colored when owned, wiped by cooldown.
 	for power in _slots:
 		var slot: Dictionary = _slots[power]
@@ -208,6 +222,16 @@ func _build_banner() -> void:
 	_banner.visible = false
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_banner)
+
+
+func _build_low_pulse() -> void:
+	_low_pulse = ColorRect.new()
+	_low_pulse.anchor_right = 1.0
+	_low_pulse.anchor_bottom = 1.0
+	_low_pulse.color = Color(0.6, 0.0, 0.0, 0.0)
+	_low_pulse.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_low_pulse)
+	move_child(_low_pulse, 0)  # under the bars
 
 
 func _build_boss_bar() -> void:

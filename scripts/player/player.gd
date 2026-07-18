@@ -45,6 +45,7 @@ const POWER_COOLDOWNS := {
 @onready var shield_frill: Node3D = $Mesh/ShieldFrill
 @onready var jaw_top: Node3D = $Mesh/JawTop
 @onready var jaw_bottom: Node3D = $Mesh/JawBottom
+@onready var club_head: Node3D = $Mesh/RightArmPivot/ClubHead
 
 var health: float
 var kills := 0
@@ -66,6 +67,10 @@ var _dash_timer := 0.0
 var _dash_power := -1
 var _dash_hits: Array = []
 var _dash_fx_accum := 0.0
+var _dodge_ready := 0.0
+var _was_on_floor := true
+var _fall_speed := 0.0
+var _club_prev := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -81,12 +86,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		_pitch = clampf(_pitch - event.relative.y * mouse_sensitivity, -1.2, 0.5)
 		pitch_pivot.rotation.x = _pitch
 		return
-	if event is InputEventMouseButton and event.pressed \
-			and event.button_index == MOUSE_BUTTON_LEFT:
+	if event is InputEventMouseButton and event.pressed:
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		else:
+		elif event.button_index == MOUSE_BUTTON_LEFT:
 			_try_attack()
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			_try_attack(true)
 		return
 	if event is InputEventKey and not event.echo:
 		match event.keycode:
@@ -114,6 +120,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_R:
 				if event.pressed:
 					activate_power(PowerSystem.Power.TAIL_SWEEP)
+			KEY_CTRL:
+				if event.pressed:
+					dodge()
 			KEY_P:
 				if event.pressed:  # debug: unlock everything
 					print("[debug] unlocking all powers")
@@ -160,18 +169,19 @@ func _physics_process(delta: float) -> void:
 	elif _shielding:
 		speed *= 0.45
 
+	# Smooth acceleration toward the target velocity (no instant starts/stops).
 	if direction.length() > 0.01:
-		velocity.x = direction.x * speed
-		velocity.z = direction.z * speed
+		velocity.x = move_toward(velocity.x, direction.x * speed, 45.0 * delta)
+		velocity.z = move_toward(velocity.z, direction.z * speed, 45.0 * delta)
 		if not _attacking:
 			var target_yaw := atan2(direction.x, direction.z)
 			visual.rotation.y = lerp_angle(visual.rotation.y, target_yaw, turn_speed * delta)
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, move_speed)
-		velocity.z = move_toward(velocity.z, 0.0, move_speed)
+		velocity.x = move_toward(velocity.x, 0.0, 38.0 * delta)
+		velocity.z = move_toward(velocity.z, 0.0, 38.0 * delta)
 
 	var hspeed := Vector2(velocity.x, velocity.z).length()
-	visual.move_amount = hspeed / move_speed
+	visual.move_amount = lerpf(visual.move_amount, hspeed / move_speed, 10.0 * delta)
 
 	# Footsteps paced by distance travelled.
 	if is_on_floor() and hspeed > 1.5:
@@ -180,7 +190,27 @@ func _physics_process(delta: float) -> void:
 			_step_accum = 0.0
 			Sfx.play3d("step", global_position, -12.0)
 
+	# Club motion trail while a swing is in flight.
+	if _attacking:
+		var club_pos := club_head.global_position
+		if _club_prev != Vector3.ZERO:
+			var seg := club_pos - _club_prev
+			if seg.length() > 0.12:
+				Gore.streak(_club_prev.lerp(club_pos, 0.5), seg,
+					Color(0.95, 0.85, 0.6, 0.7), clampf(seg.length() * 1.3, 0.3, 1.6))
+		_club_prev = club_pos
+	else:
+		_club_prev = Vector3.ZERO
+
+	_fall_speed = -velocity.y
 	move_and_slide()
+
+	# Landing thump after a real fall.
+	if is_on_floor() and not _was_on_floor and _fall_speed > 6.0:
+		Gore.puff(global_position, 12)
+		Sfx.play3d("land", global_position, -4.0)
+		_trauma = maxf(_trauma, 0.3)
+	_was_on_floor = is_on_floor()
 
 
 func _process(delta: float) -> void:
@@ -197,28 +227,39 @@ func _process(delta: float) -> void:
 
 # ------------------------------------------------------------------ club combat
 
-func _try_attack() -> void:
+func _try_attack(heavy := false) -> void:
 	if _attacking or _dashing:
 		return
 	_attacking = true
-	_attack_index = (_attack_index + 1) % 2
 	# Claws make every swing faster — the parasite quickens the arm.
 	var has_claws := PowerSystem.has_power(PowerSystem.Power.CLAWS)
-	var windup := 0.14 if has_claws else 0.18
-	var recovery := 0.22 if has_claws else 0.32
-	# Face where the camera looks, so the swing goes where the player aims.
+	var windup: float
+	var recovery: float
+	if heavy:
+		windup = 0.34
+		recovery = 0.42
+		visual.play_attack(2)
+		Sfx.play3d("heavy", global_position, -3.0)
+	else:
+		_attack_index = (_attack_index + 1) % 2
+		windup = 0.14 if has_claws else 0.18
+		recovery = 0.22 if has_claws else 0.32
+		visual.play_attack(_attack_index)
+		Sfx.play3d("swing", global_position, -6.0)
+	# Face where the camera looks, and lunge a step into the swing.
 	visual.rotation.y = yaw_pivot.rotation.y + PI
-	visual.play_attack(_attack_index)
-	Sfx.play3d("swing", global_position, -6.0)
+	var facing := -yaw_pivot.global_transform.basis.z
+	facing.y = 0.0
+	velocity += facing.normalized() * (3.2 if heavy else 2.2)
 	await get_tree().create_timer(windup).timeout
-	_strike()
+	_strike(heavy)
 	await get_tree().create_timer(recovery).timeout
 	_attacking = false
 
 
 ## The strike frame: damage everything hostile inside the hitbox.
-func _strike() -> void:
-	var damage := attack_damage
+func _strike(heavy := false) -> void:
+	var damage := 32.0 if heavy else attack_damage
 	if PowerSystem.has_power(PowerSystem.Power.CLAWS):
 		damage += 6.0
 	var hit := false
@@ -226,12 +267,42 @@ func _strike() -> void:
 		if body.is_in_group("enemies") and body.has_method("take_damage"):
 			var dir := (body.global_position - global_position)
 			dir.y = 0.0
-			body.take_damage(damage, dir.normalized())
+			body.take_damage(damage, dir.normalized() * (1.8 if heavy else 1.0))
 			hit = true
+	if heavy:
+		# The slam always shakes the ground, hit or not.
+		Gore.puff(global_position + visual.global_transform.basis.z * 1.2, 14)
+		_trauma = maxf(_trauma, 0.55)
 	if hit:
 		Sfx.play3d("hit", global_position, 0.0)
-		Gore.hitstop()
-		_trauma = maxf(_trauma, 0.5)
+		Gore.hitstop(0.05, 0.1 if heavy else 0.07)
+		_trauma = maxf(_trauma, 0.7 if heavy else 0.5)
+
+
+## Quick evasive burst (Ctrl) — brief i-frames, moves with input or backsteps.
+func dodge() -> void:
+	if _dashing or _attacking or _now() < _dodge_ready:
+		return
+	_dodge_ready = _now() + 1.2
+	var input_dir := Vector2.ZERO
+	if Input.is_physical_key_pressed(KEY_W):
+		input_dir.y -= 1.0
+	if Input.is_physical_key_pressed(KEY_S):
+		input_dir.y += 1.0
+	if Input.is_physical_key_pressed(KEY_A):
+		input_dir.x -= 1.0
+	if Input.is_physical_key_pressed(KEY_D):
+		input_dir.x += 1.0
+	var cam_basis := yaw_pivot.global_transform.basis
+	var dir := (cam_basis.z * input_dir.y) + (cam_basis.x * input_dir.x)
+	dir.y = 0.0
+	if dir.length() < 0.01:
+		dir = cam_basis.z  # no input → backstep away from where we're looking
+	dir = dir.normalized()
+	velocity = dir * 13.0 + Vector3.UP * 3.0
+	_invuln = maxf(_invuln, 0.35)
+	Gore.puff(global_position, 8)
+	Sfx.play3d("dash", global_position, -8.0, 1.3)
 
 
 # ------------------------------------------------------------------ powers
@@ -300,6 +371,11 @@ func _begin_dash(power: int, speed: float, duration: float, _color: Color) -> vo
 	visual.rotation.y = yaw_pivot.rotation.y + PI
 	visual.move_amount = 1.0
 	Sfx.play3d("dash", global_position, -2.0)
+	# FOV kick for speed feel.
+	var t := create_tween()
+	t.tween_property(camera, "fov", 80.0, 0.12)
+	t.tween_interval(maxf(duration - 0.12, 0.0))
+	t.tween_property(camera, "fov", 70.0, 0.3)
 
 
 func _dash_step(delta: float) -> void:

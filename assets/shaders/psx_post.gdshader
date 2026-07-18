@@ -15,11 +15,20 @@ const mat4 BAYER = mat4(
 	vec4(15.0, 7.0, 13.0, 5.0)
 );
 
+uniform float scanline_strength : hint_range(0.0, 0.3) = 0.08;
+uniform float vignette_strength : hint_range(0.0, 1.0) = 0.42;
+
 void fragment() {
 	vec3 col = texture(screen_tex, SCREEN_UV).rgb;
 	ivec2 px = ivec2(FRAGCOORD.xy);
 	float threshold = BAYER[px.x % 4][px.y % 4] / 16.0 - 0.5;
 	col += threshold * dither_strength / color_levels;
 	col = floor(col * color_levels + 0.5) / color_levels;
+	// CRT flavor: faint scanlines + corner vignette.
+	if (px.y % 2 == 0) {
+		col *= 1.0 - scanline_strength;
+	}
+	vec2 v = SCREEN_UV - 0.5;
+	col *= 1.0 - dot(v, v) * vignette_strength;
 	COLOR = vec4(col, 1.0);
 }

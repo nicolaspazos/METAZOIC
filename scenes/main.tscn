@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://c0metazoicmain00"]
+[gd_scene load_steps=30 format=3 uid="uid://c0metazoicmain00"]
 
 [ext_resource type="PackedScene" uid="uid://b0metazoicplayer0" path="res://scenes/player/player.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://craptormetaz0001" path="res://scenes/enemies/raptor.tscn" id="2"]
@@ -12,6 +12,9 @@
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="10"]
 [ext_resource type="Shader" path="res://assets/shaders/psx_post.gdshader" id="11"]
 [ext_resource type="AudioStream" path="res://assets/audio/hum.wav" id="12"]
+[ext_resource type="PackedScene" uid="uid://cbonesmetazoic01" path="res://scenes/world/bones.tscn" id="13"]
+[ext_resource type="Script" path="res://scripts/world/sky_dressing.gd" id="14"]
+[ext_resource type="Script" path="res://scripts/world/ambience.gd" id="15"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.18, 0.1, 0.28, 1)
@@ -103,6 +106,13 @@ script = ExtResource("5")
 tree_scene = ExtResource("6")
 rock_scene = ExtResource("7")
 fern_scene = ExtResource("8")
+bones_scene = ExtResource("13")
+
+[node name="SkyDressing" type="Node3D" parent="."]
+script = ExtResource("14")
+
+[node name="Ambience" type="Node" parent="."]
+script = ExtResource("15")
 
 [node name="CrashSite" type="Node3D" parent="."]
 

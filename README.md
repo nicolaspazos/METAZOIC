@@ -50,6 +50,8 @@ Press **F5** (or the ▶ button). You control the caveman:
 | **Q** (hold) | Ceratops Shield — blocks frontal damage |
 | **E**        | Raptor Claws — shredding dash |
 | **F**        | Tyrant Jaws — devouring bite (executes weakened prey) |
+| **RMB**      | Heavy two-hand slam (slow, 32 dmg, shockwave) |
+| **Ctrl**     | Dodge — quick burst with i-frames |
 | **Shift**    | Pachy Charge — ram that sends enemies flying |
 | **R**        | Ankylo Tail — 360° sweep |
 | **P**        | *(debug)* unlock all powers |
